@@ -1,6 +1,0 @@
-C:\Project\TestAssistant\GUIBase\bin\Debug\GUIBase.dll
-C:\Project\TestAssistant\GUIBase\bin\Debug\GUIBase.pdb
-C:\Project\TestAssistant\GUIBase\obj\Debug\GUIBase.csprojAssemblyReference.cache
-C:\Project\TestAssistant\GUIBase\obj\Debug\GUIBase.csproj.CoreCompileInputs.cache
-C:\Project\TestAssistant\GUIBase\obj\Debug\GUIBase.dll
-C:\Project\TestAssistant\GUIBase\obj\Debug\GUIBase.pdb

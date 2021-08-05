@@ -1,6 +1,0 @@
-C:\Project\TestAssistant\Data\bin\Debug\Data.dll
-C:\Project\TestAssistant\Data\bin\Debug\Data.pdb
-C:\Project\TestAssistant\Data\obj\Debug\Data.csprojAssemblyReference.cache
-C:\Project\TestAssistant\Data\obj\Debug\Data.csproj.CoreCompileInputs.cache
-C:\Project\TestAssistant\Data\obj\Debug\Data.dll
-C:\Project\TestAssistant\Data\obj\Debug\Data.pdb
