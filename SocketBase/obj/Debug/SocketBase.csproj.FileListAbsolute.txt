@@ -1,0 +1,6 @@
+C:\Project\TestAssistant\SocketBase\bin\Debug\SocketBase.dll
+C:\Project\TestAssistant\SocketBase\bin\Debug\SocketBase.pdb
+C:\Project\TestAssistant\SocketBase\obj\Debug\SocketBase.csprojAssemblyReference.cache
+C:\Project\TestAssistant\SocketBase\obj\Debug\SocketBase.csproj.CoreCompileInputs.cache
+C:\Project\TestAssistant\SocketBase\obj\Debug\SocketBase.dll
+C:\Project\TestAssistant\SocketBase\obj\Debug\SocketBase.pdb
