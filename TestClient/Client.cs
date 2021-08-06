@@ -32,7 +32,7 @@ namespace TestClient
             }
             catch (Exception e)
             {
-                MessageBox.Show("create client failed");
+                MessageBox.Show(string.Format("create client failed {0}", e.Message);
                 throw;
             }
         }

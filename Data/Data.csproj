@@ -46,6 +46,7 @@
     <Compile Include="ServerData.cs" />
     <Compile Include="TestItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="DataHead.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

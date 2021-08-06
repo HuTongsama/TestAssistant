@@ -64,6 +64,11 @@ namespace TestServer
             Socket acceptSocket = _listenSocket.EndAccept(ar);
             _clientSockets.Add(acceptSocket);
             string message = GennerateMessage();
+            byte[] messageBuf = System.Text.Encoding.ASCII.GetBytes(message);
+            DataHead head = new DataHead();
+            head.DataLength = messageBuf.Length;
+            byte[] headBuf = head.ToByteArray();
+            headBuf.Append<byte[]>(messageBuf);
             AsyncSend(acceptSocket, message);
             _listenSocket.BeginAccept(AcceptCallback, _listenSocket);
 
