@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace Data
 {
+    [Serializable]
     public class DataHead
     {
         public int DataLength { get; set; }

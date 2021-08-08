@@ -85,7 +85,7 @@ namespace SocketBase
                 if (_dataHead != null)
                 {
                     int dataLength = _dataHead.DataLength;
-                    if (_stringBuilder.Length > dataLength)
+                    if (_stringBuilder.Length >= dataLength)
                     {
                         FinishReceive();
                     }

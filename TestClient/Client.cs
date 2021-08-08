@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using SocketBase;
+
 namespace TestClient
 {
     public class Client : SocketBase.SocketBase
@@ -24,7 +25,7 @@ namespace TestClient
                
                 IPHostEntry ipHostInfo = Dns.GetHostEntry("127.0.0.1");
                 
-                _ipAddress = ipHostInfo.AddressList[1];
+                _ipAddress = ipHostInfo.AddressList[0];
                
                _port = 8888;
                 _clientSocket = new Socket(_ipAddress.AddressFamily,
@@ -32,7 +33,7 @@ namespace TestClient
             }
             catch (Exception e)
             {
-                MessageBox.Show(string.Format("create client failed {0}", e.Message);
+                MessageBox.Show(string.Format("create client failed {0}", e.Message));
                 throw;
             }
         }
@@ -50,6 +51,7 @@ namespace TestClient
 
                 _clientSocket.Blocking = false;
                 _clientSocket.Send(tmp, 0, 0);
+                Thread.Sleep(100);
             }
             catch (SocketException e)
             {
@@ -58,7 +60,7 @@ namespace TestClient
                 {
                     isConnected = false;
                 }
-
+               
             }
             finally
             {

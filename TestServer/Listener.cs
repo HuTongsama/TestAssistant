@@ -37,7 +37,7 @@ namespace TestServer
                 int port = 8888;
                 _listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 _listenSocket.Bind(new IPEndPoint(IPAddress.Any, port));
-                _listenSocket.Listen(10);
+                _listenSocket.Listen(5);
             }
             catch (Exception)
             {
@@ -68,8 +68,8 @@ namespace TestServer
             DataHead head = new DataHead();
             head.DataLength = messageBuf.Length;
             byte[] headBuf = head.ToByteArray();
-            headBuf.Append<byte[]>(messageBuf);
-            AsyncSend(acceptSocket, message);
+            byte[] finalBuf = headBuf.Concat<Byte>(messageBuf).ToArray();          
+            AsyncSend(acceptSocket, finalBuf);
             _listenSocket.BeginAccept(AcceptCallback, _listenSocket);
 
         }

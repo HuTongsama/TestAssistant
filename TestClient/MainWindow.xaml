@@ -7,6 +7,12 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Window.Resources>
+        <Style x:Key="ListItemStyle" TargetType="ListBoxItem">
+            <Style.Setters>
+                <Setter Property="Content" Value="{Binding ItemName}"></Setter>
+                <Setter Property="IsSelected" Value="{Binding IsSelected}"></Setter>
+            </Style.Setters>
+        </Style>
         <Style x:Key="TabItemStyle" TargetType="TabItem">
             <Setter Property="Header" Value="{Binding Header}"></Setter>
             <Style.Triggers>
@@ -30,7 +36,7 @@
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
                                     </ListView>
-                                    <ListBox ItemsSource="{Binding PictureSetList}"/>
+                                    <ListBox ItemsSource="{Binding PictureSetList}" ItemContainerStyle="{StaticResource ListItemStyle}"/>
                                 </Grid>
                                 <ListBox HorizontalAlignment="Left" Height="256" Margin="80,13,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
                             </Grid>
@@ -57,7 +63,7 @@
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
                                     </ListView>
-                                    <ListBox ItemsSource="{Binding PictureSetList}"/>
+                                    <ListBox ItemsSource="{Binding PictureSetList}" ItemContainerStyle="{StaticResource ListItemStyle}"/>
                                 </Grid>
                                 <ListBox HorizontalAlignment="Left" Height="256" Margin="80,13,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
                             </Grid>
@@ -84,7 +90,7 @@
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
                                     </ListView>
-                                    <ListBox ItemsSource="{Binding PictureSetList}"/>
+                                    <ListBox ItemsSource="{Binding PictureSetList}" ItemContainerStyle="{StaticResource ListItemStyle}"/>
                                 </Grid>
                                 <ListBox HorizontalAlignment="Left" Height="256" Margin="80,13,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
                             </Grid>
