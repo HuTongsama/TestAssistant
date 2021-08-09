@@ -184,6 +184,22 @@ namespace TestServer
                 default:
                     break;
             }
+
+            switch (key)
+            {
+                case "DBR":
+                    {
+                        serverData.KeyToPictureSet.Add("1D", new List<string>() { "1.csv", "2.csv" });
+                        serverData.KeyToPictureSet.Add("2D", new List<string>() { "3.csv", "4.csv" });
+                    }
+                    break;
+                case "DLR":
+                    break;
+                case "DCN":
+                    break;
+                default:
+                    break;
+            }
         }
         private string GenerateMessage()
         {

@@ -36,9 +36,10 @@
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
                                     </ListView>
-                                    <ListBox ItemsSource="{Binding PictureSetList}" ItemContainerStyle="{StaticResource ListItemStyle}"/>
+                                    <ListBox ItemsSource="{Binding PictureSetList}" ItemContainerStyle="{StaticResource ListItemStyle}"
+                                             SelectionMode="Multiple"/>
                                 </Grid>
-                                <ListBox HorizontalAlignment="Left" Height="256" Margin="80,13,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
+                                <ListBox ItemsSource="{Binding SelectedPicList}" ItemContainerStyle="{StaticResource ListItemStyle}" HorizontalAlignment="Left" Height="256" Margin="80,13,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
                             </Grid>
                         </Setter.Value>
                     </Setter>
@@ -63,9 +64,10 @@
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
                                     </ListView>
-                                    <ListBox ItemsSource="{Binding PictureSetList}" ItemContainerStyle="{StaticResource ListItemStyle}"/>
+                                    <ListBox ItemsSource="{Binding PictureSetList}" ItemContainerStyle="{StaticResource ListItemStyle}"
+                                             SelectionMode="Multiple"/>
                                 </Grid>
-                                <ListBox HorizontalAlignment="Left" Height="256" Margin="80,13,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
+                                <ListBox ItemsSource="{Binding SelectedPicList}" ItemContainerStyle="{StaticResource ListItemStyle}" HorizontalAlignment="Left" Height="256" Margin="80,13,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
                             </Grid>
                         </Setter.Value>
                     </Setter>
@@ -90,9 +92,10 @@
                                             </DataTemplate>
                                         </ListView.ItemTemplate>
                                     </ListView>
-                                    <ListBox ItemsSource="{Binding PictureSetList}" ItemContainerStyle="{StaticResource ListItemStyle}"/>
+                                    <ListBox ItemsSource="{Binding PictureSetList}" ItemContainerStyle="{StaticResource ListItemStyle}"
+                                             SelectionMode="Multiple"/>
                                 </Grid>
-                                <ListBox HorizontalAlignment="Left" Height="256" Margin="80,13,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
+                                <ListBox ItemsSource="{Binding SelectedPicList}" ItemContainerStyle="{StaticResource ListItemStyle}" HorizontalAlignment="Left" Height="256" Margin="80,13,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
                             </Grid>
                         </Setter.Value>
                     </Setter>

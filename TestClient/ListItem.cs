@@ -40,11 +40,20 @@ namespace TestClient
             IsSelected = isSelected;
             ItemName = itemName;
         }
-        public bool IsSameListItem(ListItem other)
+    }
+
+    class SameListItem : EqualityComparer<ListItem>
+    {
+        public override bool Equals(ListItem x, ListItem y)
         {
-            if (_itemName == other.ItemName)
+            if (x.ItemName == y.ItemName)
                 return true;
             return false;
+        }
+
+        public override int GetHashCode(ListItem obj)
+        {
+            return obj.ItemName.Length;
         }
     }
 }

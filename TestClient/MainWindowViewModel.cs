@@ -58,14 +58,20 @@ namespace TestClient
                         if (_tabItems.ContainsKey(key))
                         {
                             TabItemViewModel curTab = _tabItems[key];
-                            foreach (var picSet in serverData.PictureSetList)
+                            App.Current.Dispatcher.Invoke((Action)delegate
                             {
-                                curTab.PictureSetList.Add(new ListItem(picSet));
-                            }
+                                foreach (var picSet in serverData.PictureSetList)
+                                {
+                                    curTab.PictureSetList.Add(new ListItem(picSet));
+                                }
+                            });
+                            
                             foreach (var template in serverData.TemplateList)
                             {
                                 curTab.TemplateSetList.Add(new ListItem(template));
                             }
+ 
+                            Dictionary<string, List<ListItem>> tmpKeyToPicSet = new Dictionary<string, List<ListItem>>();
                             foreach (var keyPair in serverData.KeyToPictureSet)
                             {
                                 string tmpKey = keyPair.Key;
@@ -75,8 +81,9 @@ namespace TestClient
                                 {
                                     tmpList.Add(new ListItem(str));
                                 }
-                                curTab.KeyToPicSet.Add(tmpKey, tmpList);
+                                tmpKeyToPicSet.Add(tmpKey, tmpList);
                             }
+                            curTab.KeyToPicSet = tmpKeyToPicSet;
                         }
                     }
                     //TabItems.

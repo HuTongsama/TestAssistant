@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
@@ -58,46 +59,10 @@ namespace TestClient
                 }
             }
         }
-
-        private List<ListItem> _pictureSetList = new List<ListItem>();
-        public List<ListItem> PictureSetList
-        {
-            get => _pictureSetList;
-            set
-            {
-                if (value != _pictureSetList)
-                {
-                    _pictureSetList = value;
-                    NotifyPropertyChanged("PictureSetList");
-                }
-            }
-        }
-        private List<ListItem> _templateSetList = new List<ListItem>();
-        public List<ListItem> TemplateSetList
-        {
-            get => _templateSetList;
-            set
-            {
-                if (value != _templateSetList)
-                {
-                    _templateSetList = value;
-                    NotifyPropertyChanged("TemplateSetList");
-                }
-            }
-        }
-        private List<ListItem> _selectedPicList = new List<ListItem>();
-        public List<ListItem> SelectedPicList
-        {
-            get => _selectedPicList;
-            set
-            {
-                if (value != _selectedPicList)
-                {
-                    _selectedPicList = value;
-                    NotifyPropertyChanged("SelectedPicList");
-                }
-            }
-        }
+       
+        public List<ListItem> TemplateSetList { get; set; } = new List<ListItem>();
+        public ObservableCollection<ListItem> PictureSetList { get; set; } = new ObservableCollection<ListItem>();
+        public ObservableCollection<ListItem> SelectedPicList { get; set; } = new ObservableCollection<ListItem>();
         private Dictionary<string, List<ListItem>> _keyToPicSet = new Dictionary<string, List<ListItem>>();
         public Dictionary<string, List<ListItem>> KeyToPicSet
         {
@@ -109,10 +74,14 @@ namespace TestClient
                     _keyToPicSet = value;
                     foreach (var item in _keyToPicSet)
                     {
-                        CheckState checkState = new CheckState(item.Key);
-                        checkState.PropertyChanged += this.CheckStatePropertyChanged;
-                        _keyToCheckState.Add(checkState);
-                    }
+                        App.Current.Dispatcher.Invoke((Action)delegate
+                        {
+                            CheckState checkState = new CheckState(item.Key);
+                            checkState.PropertyChanged += this.CheckStatePropertyChanged;
+                            _keyToCheckState.Add(checkState);
+                        });
+                        
+                    }                  
                     NotifyPropertyChanged("KeyToPicSet");
                 }
             }
@@ -133,9 +102,37 @@ namespace TestClient
         public TabItemViewModel(string header)
         {
             Header = header;
-            //KeyToCheckState.Add(new CheckState("1",true));
-            //KeyToCheckState.Add(new CheckState("2", true));
-            //KeyToCheckState.Add(new CheckState("3", true));
+            PictureSetList.CollectionChanged += PictureSetListChanged;
+            SelectedPicList.CollectionChanged += SelectedSetListChanged;
+        }
+
+        private void UpdateSelectedPicList(ListItem item, bool isAdd, EqualityComparer<ListItem> comparer)
+        {
+            if (isAdd)
+            {
+                if (Enumerable.Contains(SelectedPicList, item, comparer)
+                 || !Enumerable.Contains(PictureSetList, item, comparer))
+                {
+                    return;
+                }
+                else
+                {
+                    SelectedPicList.Add(item);
+
+                }
+            }
+            else
+            {
+                for (int i = 0; i < SelectedPicList.Count; ++i)
+                {
+                    if (SelectedPicList[i].ItemName == item.ItemName)
+                    {                       
+                        SelectedPicList.RemoveAt(i);
+                        break;
+                    }
+                }
+
+            }
         }
         private void CheckStatePropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -146,17 +143,52 @@ namespace TestClient
             if (_keyToPicSet.ContainsKey(key))
             {
                 List<ListItem> curPicSet = _keyToPicSet[key];
+                SameListItem isSameItem = new SameListItem();
                 foreach (var item in curPicSet)
                 {
-                    if (SelectedPicList.Exists(item.IsSameListItem)
-                        || !PictureSetList.Exists(item.IsSameListItem))
+                    UpdateSelectedPicList(item, checkState.State, isSameItem);
+
+                }
+            }
+        }
+        private void ListItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            ListItem item = (ListItem)sender;
+            if (item == null)
+                return;
+            switch (e.PropertyName)
+            {
+                case "IsSelected":
                     {
-                        continue;
+                        SameListItem isSameItem = new SameListItem();
+                        ListItem addItem = new ListItem(item.ItemName);
+                        UpdateSelectedPicList(addItem, item.IsSelected, isSameItem);
                     }
-                    else
-                    {
-                        SelectedPicList.Add(item);
-                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        private void PictureSetListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null && e.NewItems.Count > 0)
+            {
+                foreach (var item in e.NewItems)
+                {
+                    ListItem listItem = (ListItem)item;
+                    listItem.PropertyChanged += ListItemPropertyChanged;
+                }
+            }
+            
+        }
+        private void SelectedSetListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems != null && e.OldItems.Count > 0)
+            {
+                foreach (var item in e.OldItems)
+                {
+                    ListItem listItem = (ListItem)item;
+                    
                 }
             }
         }
