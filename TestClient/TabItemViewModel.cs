@@ -6,6 +6,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
 using GUIBase;
 namespace TestClient
 {
@@ -99,6 +101,22 @@ namespace TestClient
             }
         }
 
+        private void SelectedItemRightClick(object obj)
+        {
+            MessageBox.Show("item clicked");
+        }
+        private RelayCommand _selectedItemRightClickCommand;
+        public ICommand SelectedItemRightClickCommand
+        {
+            get 
+            {
+                if (_selectedItemRightClickCommand == null)
+                {
+                    _selectedItemRightClickCommand = new RelayCommand(SelectedItemRightClick, delegate{ return true; });
+                }
+                return _selectedItemRightClickCommand;
+            }
+        }
         public TabItemViewModel(string header)
         {
             Header = header;
@@ -188,7 +206,14 @@ namespace TestClient
                 foreach (var item in e.OldItems)
                 {
                     ListItem listItem = (ListItem)item;
-                    
+                    foreach (var picListItem in PictureSetList)
+                    {
+                        if (picListItem.ItemName == listItem.ItemName)
+                        {
+                            picListItem.IsSelected = false;
+                            break;
+                        }
+                    }
                 }
             }
         }
