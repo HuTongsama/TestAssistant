@@ -100,7 +100,7 @@ namespace TestClient
                 return _keyToCheckState;
             }
         }
-
+        private string _selectedTemplate = string.Empty;
         
         public TabItemViewModel(string header)
         {
@@ -204,9 +204,19 @@ namespace TestClient
                 }
             }
         }
+        private void UpdateSelectedTemplate(string template)
+        {
+            _selectedTemplate = template;
+        }
         private void SelectedItemRightClicked()
         {
-            MessageBox.Show("right click");
+            TemplateViewModel templateVm = new TemplateViewModel();
+            templateVm.TemplateList = new ObservableCollection<ListItem>(TemplateSetList);
+            templateVm.UpdateOwnerData = UpdateSelectedTemplate;
+            TemplateWindowService templateWindowService = new TemplateWindowService();
+
+            templateWindowService.OpenWindow(templateVm);
+            //MessageBox.Show("right click");
         }
     }
 }

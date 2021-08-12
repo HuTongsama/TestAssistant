@@ -60,6 +60,7 @@ namespace TestClient
             UIElement element = sender as UIElement;
             ICommand command = element.GetValue(ListItemAttachedBehaviour.MouseRightClickCommandProperty) as ICommand;
             command.Execute(element.GetValue(ListItemAttachedBehaviour.CommandParamProperty));
+            e.Handled = true;
         }
         private static void MousRightClickChanged(DependencyObject target,DependencyPropertyChangedEventArgs e)
         {

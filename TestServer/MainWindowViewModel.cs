@@ -189,8 +189,10 @@ namespace TestServer
             {
                 case "DBR":
                     {
-                        serverData.KeyToPictureSet.Add("1D", new List<string>() { "1.csv", "2.csv" });
-                        serverData.KeyToPictureSet.Add("2D", new List<string>() { "3.csv", "4.csv" });
+                        if (!serverData.KeyToPictureSet.ContainsKey("1D"))
+                            serverData.KeyToPictureSet.Add("1D", new List<string>() { "1.csv", "2.csv" });
+                        if (!serverData.KeyToPictureSet.ContainsKey("2D"))
+                            serverData.KeyToPictureSet.Add("2D", new List<string>() { "3.csv", "4.csv" });
                     }
                     break;
                 case "DLR":
