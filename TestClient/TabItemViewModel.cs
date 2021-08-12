@@ -101,22 +101,7 @@ namespace TestClient
             }
         }
 
-        private void SelectedItemRightClick(object obj)
-        {
-            MessageBox.Show("item clicked");
-        }
-        private RelayCommand _selectedItemRightClickCommand;
-        public ICommand SelectedItemRightClickCommand
-        {
-            get 
-            {
-                if (_selectedItemRightClickCommand == null)
-                {
-                    _selectedItemRightClickCommand = new RelayCommand(SelectedItemRightClick, delegate{ return true; });
-                }
-                return _selectedItemRightClickCommand;
-            }
-        }
+        
         public TabItemViewModel(string header)
         {
             Header = header;
@@ -135,6 +120,8 @@ namespace TestClient
                 }
                 else
                 {
+                    item.UseCustomerRightClick = true;
+                    item.OwnerCallBack = SelectedItemRightClicked;
                     SelectedPicList.Add(item);
 
                 }
@@ -216,6 +203,10 @@ namespace TestClient
                     }
                 }
             }
+        }
+        private void SelectedItemRightClicked()
+        {
+            MessageBox.Show("right click");
         }
     }
 }

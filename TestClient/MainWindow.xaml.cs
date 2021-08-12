@@ -25,7 +25,5 @@ namespace TestClient
             InitializeComponent();
             this.DataContext = new MainWindowViewModel();
         }
-
-
     }
 }
