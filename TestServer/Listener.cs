@@ -24,8 +24,7 @@ namespace TestServer
                 GenerateItemList();
                 return _itemList;
             }
-        }
-        private ManualResetEvent _receiveDone = new ManualResetEvent(false);
+        }      
         private string _recceiveString = string.Empty;
         public Func<string> GennerateMessage { get; set; }
         public Listener()
@@ -58,18 +57,38 @@ namespace TestServer
                 throw;
             }
         }
+        public void SendToAllClients(byte[] data)
+        {
+            byte[] message = PackData(data);
+            for (int socketId = 0; socketId < _clientSockets.Count; ++socketId)
+            {
+                if (IsConnected(_clientSockets[socketId]))
+                {
+                    SyncSend(_clientSockets[socketId], message);
+                }
+                else
+                {
+                    _clientSockets.RemoveAt(socketId);
+                    socketId--;
+                }
+            }
+        }
+        private byte[] PackData(byte[] originData)
+        {
+            DataHead head = new DataHead();
+            head.DataLength = originData.Length;
+            byte[] headBuf = head.ToByteArray();
+            byte[] finalbuf = headBuf.Concat<Byte>(originData).ToArray();
+            return finalbuf;
+        }
         private void AcceptCallback(IAsyncResult ar)
         {
-
             Socket acceptSocket = _listenSocket.EndAccept(ar);
             _clientSockets.Add(acceptSocket);
             string message = GennerateMessage();
             byte[] messageBuf = System.Text.Encoding.ASCII.GetBytes(message);
-            DataHead head = new DataHead();
-            head.DataLength = messageBuf.Length;
-            byte[] headBuf = head.ToByteArray();
-            byte[] finalBuf = headBuf.Concat<Byte>(messageBuf).ToArray();          
-            AsyncSend(acceptSocket, finalBuf);
+            byte[] finalBuf = PackData(messageBuf);          
+            SyncSend(acceptSocket, finalBuf);
             _listenSocket.BeginAccept(AcceptCallback, _listenSocket);
 
         }
@@ -82,9 +101,10 @@ namespace TestServer
                 if (socket.Available > 0)
                 {
                     _recceiveString = null;
-                    _receiveDone.Reset();
-                    AsyncReceive(socket);
-                    _receiveDone.WaitOne();
+                    
+                    int receiveLength = SyncReceive(socket);
+                    if (receiveLength > 0)
+                        _recceiveString = _stringBuilder.ToString();
                     if (_recceiveString != null)
                     {
                         TestItem item = TestItem.GenerateTestItem(_recceiveString);
@@ -94,11 +114,6 @@ namespace TestServer
             }
             _itemList.Sort();
         }
-
-        override protected void  FinishReceive()
-        {
-            _recceiveString = _stringBuilder.ToString();
-            _receiveDone.Set();
-        }
+      
     }
 }

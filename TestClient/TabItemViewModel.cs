@@ -78,6 +78,11 @@ namespace TestClient
                     {
                         App.Current.Dispatcher.Invoke((Action)delegate
                         {
+
+                            CheckState tmpState = Enumerable.FirstOrDefault(_keyToCheckState, 
+                                delegate (CheckState state) { return state.StateKey == item.Key; });
+                            if (tmpState != null)
+                                _keyToCheckState.Remove(tmpState);
                             CheckState checkState = new CheckState(item.Key);
                             checkState.PropertyChanged += this.CheckStatePropertyChanged;
                             _keyToCheckState.Add(checkState);

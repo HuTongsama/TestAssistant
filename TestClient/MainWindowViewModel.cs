@@ -45,50 +45,65 @@ namespace TestClient
                 if (!_client.IsConnected())
                     continue;
                 string receiveData = _client.ReceiveData();
-                var jsonValue = JsonSerializer.Deserialize<Dictionary<string,ServerData>>(receiveData);
-                foreach (var tabData in jsonValue)
+                try
                 {
-                    string key = tabData.Key;
-                    ServerData serverData = tabData.Value;
-                    if (serverData.DataType == "Message")
+                    var jsonValue = JsonSerializer.Deserialize<Dictionary<string, ServerData>>(receiveData);
+                    foreach (var tabData in jsonValue)
                     {
-
-                    }
-                    else if(serverData.DataType == "ServerData")
-                    {
-                        if (_tabItems.ContainsKey(key))
+                        string key = tabData.Key;
+                        ServerData serverData = tabData.Value;
+                        if (serverData.DataType == "Message")
                         {
-                            TabItemViewModel curTab = _tabItems[key];
-                            App.Current.Dispatcher.Invoke((Action)delegate
-                            {
-                                foreach (var picSet in serverData.PictureSetList)
-                                {
-                                    curTab.PictureSetList.Add(new ListItem(picSet));
-                                }
-                            });
-                            
-                            foreach (var template in serverData.TemplateList)
-                            {
-                                curTab.TemplateSetList.Add(new ListItem(template));
-                            }
- 
-                            Dictionary<string, List<ListItem>> tmpKeyToPicSet = new Dictionary<string, List<ListItem>>();
-                            foreach (var keyPair in serverData.KeyToPictureSet)
-                            {
-                                string tmpKey = keyPair.Key;
-                                List<String> tmpValue = keyPair.Value;
-                                List<ListItem> tmpList = new List<ListItem>();
-                                foreach (var str in tmpValue)
-                                {
-                                    tmpList.Add(new ListItem(str));
-                                }
-                                tmpKeyToPicSet.Add(tmpKey, tmpList);
-                            }
-                            curTab.KeyToPicSet = tmpKeyToPicSet;
+
                         }
+                        else if (serverData.DataType == "ServerData")
+                        {
+                            if (_tabItems.ContainsKey(key))
+                            {
+                                TabItemViewModel curTab = _tabItems[key];
+                                SameListItem sameListItem = new SameListItem();
+                                App.Current.Dispatcher.Invoke((Action)delegate
+                                {
+                                    foreach (var picSet in serverData.PictureSetList)
+                                    {
+                                        ListItem item = new ListItem(picSet);
+                                        if (Enumerable.Contains(curTab.PictureSetList, item, sameListItem))
+                                            continue;
+                                        curTab.PictureSetList.Add(item);
+                                    }
+                                });
+
+                                foreach (var template in serverData.TemplateList)
+                                {
+                                    ListItem item = new ListItem(template);
+                                    if (Enumerable.Contains(curTab.TemplateSetList, item, sameListItem))
+                                        continue;
+                                    curTab.TemplateSetList.Add(item);
+                                }
+
+                                Dictionary<string, List<ListItem>> tmpKeyToPicSet = new Dictionary<string, List<ListItem>>();
+                                foreach (var keyPair in serverData.KeyToPictureSet)
+                                {
+                                    string tmpKey = keyPair.Key;
+                                    List<String> tmpValue = keyPair.Value;
+                                    List<ListItem> tmpList = new List<ListItem>();
+                                    foreach (var str in tmpValue)
+                                    {
+                                        tmpList.Add(new ListItem(str));
+                                    }
+                                    tmpKeyToPicSet.Add(tmpKey, tmpList);
+                                }
+                                curTab.KeyToPicSet = tmpKeyToPicSet;
+                            }
+                        }
+                        //TabItems.
                     }
-                    //TabItems.
                 }
+                catch (Exception)
+                {
+                    continue;
+                }
+                
             }
         }
     }

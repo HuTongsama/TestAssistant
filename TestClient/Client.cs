@@ -16,13 +16,11 @@ namespace TestClient
         private Socket _clientSocket;
         private IPAddress _ipAddress;
         private int _port;
-        private ManualResetEvent _receiveDone = new ManualResetEvent(false);
         private string _recceiveString = string.Empty;
         public Client()
         {
             try
-            {
-               
+            {              
                 IPHostEntry ipHostInfo = Dns.GetHostEntry("127.0.0.1");
                 
                 _ipAddress = ipHostInfo.AddressList[1];
@@ -39,43 +37,15 @@ namespace TestClient
         }
         public bool IsConnected()
         {
-            if (_clientSocket == null)
-            {
-                return false;
-            }
-            bool isConnected = true;
-            bool blockingState = _clientSocket.Blocking;
-            try
-            {
-                byte[] tmp = new byte[1];
-
-                _clientSocket.Blocking = false;
-                _clientSocket.Send(tmp, 0, 0);
-                Thread.Sleep(100);
-            }
-            catch (SocketException e)
-            {
-                // 10035 == WSAEWOULDBLOCK
-                if (!e.NativeErrorCode.Equals(10035))
-                {
-                    isConnected = false;
-                }
-               
-            }
-            finally
-            {
-                _clientSocket.Blocking = blockingState;
-            }
-
-            return isConnected;
+            return IsConnected(_clientSocket);
         }
         public string ReceiveData()
         {
             if (_clientSocket == null)
-                return string.Empty;
-            _receiveDone.Reset();
-            AsyncReceive(_clientSocket);
-            _receiveDone.WaitOne();
+                return string.Empty;         
+            int receiveLength = SyncReceive(_clientSocket);
+            if (receiveLength > 0)
+                _recceiveString = _stringBuilder.ToString();
             return _recceiveString;
            
         }
@@ -106,10 +76,6 @@ namespace TestClient
             }
         }
 
-        override protected void FinishReceive()
-        {
-            _recceiveString = _stringBuilder.ToString();
-            _receiveDone.Set();
-        }
+        
     }
 }

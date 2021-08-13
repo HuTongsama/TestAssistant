@@ -8,7 +8,13 @@
         Title="TemplateWindow" Height="294" Width="210">
     <Grid>
         <StackPanel>
-            <ListBox Height="230" ItemsSource="{Binding Path=TemplateList,ElementName=ItemName}"  SelectedIndex="{Binding SelectedId}"/>
+            <ListBox Height="230" ItemsSource="{Binding TemplateList, BindingGroupName=ItemName}" SelectedIndex="{Binding SelectedId}">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="Content" Value="{Binding ItemName}"></Setter>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+            </ListBox>
             <Button Content="ok" Command="{Binding TemplateButtonClickCommand}" Height="32" Margin="57,0,50,0"/>
         </StackPanel>
 

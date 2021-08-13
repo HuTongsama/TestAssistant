@@ -202,6 +202,9 @@ namespace TestServer
                 default:
                     break;
             }
+            string message = GenerateMessage();
+            byte[] data = System.Text.Encoding.ASCII.GetBytes(message);
+            _listener.SendToAllClients(data);
         }
         private string GenerateMessage()
         {
