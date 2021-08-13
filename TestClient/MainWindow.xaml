@@ -6,7 +6,7 @@
         xmlns:i ="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:TestClient"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="488" Width="873">
     <Window.Resources>
         <Style x:Key="ListItemStyle" TargetType="ListBoxItem">
             <Style.Setters>
@@ -22,13 +22,14 @@
         <ControlTemplate x:Key="TabGridTemplate">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="239*"/>
-                    <ColumnDefinition Width="317*"/>
+                    <ColumnDefinition Width="260*"/>
+                    <ColumnDefinition Width="120*"/>
+                    <ColumnDefinition Width="250*"/>
                 </Grid.ColumnDefinitions>
-                <Grid HorizontalAlignment="Left" Height="256" Margin="19,13,0,-16" VerticalAlignment="Top" Width="258" Grid.ColumnSpan="2">
+                <Grid HorizontalAlignment="Center" Height="256" Margin="0,10,0,10" VerticalAlignment="Top" Width="258" Grid.Column="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="5*"/>
-                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3*"/>
                     </Grid.ColumnDefinitions>
                     <ListView ItemsSource="{Binding KeyToCheckState}" Grid.Column="1">
                         <ListView.ItemTemplate>
@@ -39,11 +40,34 @@
                     </ListView>
                     <ListBox ItemsSource="{Binding PictureSetList}" ItemContainerStyle="{StaticResource ListItemStyle}"
                                              SelectionMode="Multiple"/>
+                    
                 </Grid>
                 <ListBox ItemsSource="{Binding SelectedPicList}" ItemContainerStyle="{StaticResource ListItemStyle}" SelectionMode="Multiple"
-                                         HorizontalAlignment="Left" Height="256" Margin="80,13,0,0" VerticalAlignment="Top" Width="120" Grid.Column="1">
-                                       
+                                         HorizontalAlignment="Center" Height="256" Margin="0,10,0,10" VerticalAlignment="Top" Width="120" Grid.Column="1">
                 </ListBox>
+                <Grid Height="256" Width="250" Margin="0,10,0,10" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Column="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*"></ColumnDefinition>
+                        <ColumnDefinition Width="5*"></ColumnDefinition>
+                        <ColumnDefinition Width="1*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Label Content="默认模板" Margin="0,30,0,30" Grid.Row="0" Grid.Column="0"></Label>
+                    <TextBox Text="" Margin="0,30,0,30" Grid.Row="0" Grid.Column="1"></TextBox>
+                    <Button Content=".." Margin="0,30,0,30" Grid.Row="0" Grid.Column="2"></Button>
+
+                    <Label Content="x86DllPath" Margin="0,30,0,30" Grid.Row="1" Grid.Column="0"></Label>
+                    <TextBox Text="" Margin="0,30,0,30" Grid.Row="1" Grid.Column="1"></TextBox>
+                    <Button Content=".." Margin="0,30,0,30" Grid.Row="1" Grid.Column="2"></Button>
+
+                    <Label Content="x64DllPath" Margin="0,30,0,30" Grid.Row="2" Grid.Column="0"></Label>
+                    <TextBox Text="" Margin="0,30,0,30" Grid.Row="2" Grid.Column="1"></TextBox>
+                    <Button Content=".." Margin="0,30,0,30" Grid.Row="2" Grid.Column="2"></Button>
+                </Grid>
             </Grid>
         </ControlTemplate>
         <Style x:Key="TabItemStyle" TargetType="TabItem">
@@ -74,8 +98,12 @@
         </Style>
     </Window.Resources>
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="383*"/>
+            <ColumnDefinition Width="409*"/>
+        </Grid.ColumnDefinitions>
         <TabControl ItemsSource="{Binding TabItems.Values}" ItemContainerStyle="{StaticResource TabItemStyle}" SelectedIndex="0" 
-                    HorizontalAlignment="Left" Height="317" Margin="10,10,0,0" VerticalAlignment="Top" Width="579"></TabControl>
-        
+                    HorizontalAlignment="Left" Height="317" Margin="10,10,0,0" VerticalAlignment="Top" Width="659" Grid.ColumnSpan="2"></TabControl>
+
     </Grid>
 </Window>

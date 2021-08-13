@@ -106,7 +106,9 @@ namespace TestClient
             }
         }
         private string _selectedTemplate = string.Empty;
-        
+        public string X86Path { get; set; } = string.Empty;
+        public string X64Path { get; set; } = string.Empty;
+
         public TabItemViewModel(string header)
         {
             Header = header;
