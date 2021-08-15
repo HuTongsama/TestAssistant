@@ -12,7 +12,7 @@ using System.Threading;
 
 namespace TestClient
 {
-    
+
     public class MainWindowViewModel : ViewModelBase
     {
         private Dictionary<string, TabItemViewModel> _tabItems = new Dictionary<string, TabItemViewModel>();
@@ -104,7 +104,7 @@ namespace TestClient
                 {
                     continue;
                 }
-                
+
             }
         }
     }
