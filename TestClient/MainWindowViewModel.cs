@@ -20,12 +20,13 @@ namespace TestClient
         {
             get => _tabItems;
         }
-       
+        public TabItemViewModel SelectedItem { get; set; } = null;
         private Client _client = new Client();
         public MainWindowViewModel()
         {
             TabItemViewModel item = new TabItemViewModel("DBR");
             _tabItems.Add("DBR", item);
+            SelectedItem = item;
             item = new TabItemViewModel("DLR");
             _tabItems.Add("DLR", item);
             item = new TabItemViewModel("DCN");

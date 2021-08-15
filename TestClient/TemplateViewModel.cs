@@ -9,8 +9,7 @@ using GUIBase;
 namespace TestClient
 {
     class TemplateViewModel : ViewModelBase
-    {
-        public bool IsModal { get; } = true;
+    {       
         public int SelectedId { get; set; } = -1;
         public Action CloseAction { get; set; } = delegate { };
         public Action<string> UpdateOwnerData { get; set; } = delegate { };

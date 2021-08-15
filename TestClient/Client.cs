@@ -23,7 +23,7 @@ namespace TestClient
             {              
                 IPHostEntry ipHostInfo = Dns.GetHostEntry("127.0.0.1");
                 
-                _ipAddress = ipHostInfo.AddressList[1];
+                _ipAddress = ipHostInfo.AddressList[0];
                
                _port = 8888;
                 _clientSocket = new Socket(_ipAddress.AddressFamily,

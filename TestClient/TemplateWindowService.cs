@@ -15,7 +15,8 @@ namespace TestClient
             templateVm.CloseAction = window.Close;
             window.DataContext = templateVm;
             window.Focus();
-            window.Show();
+            
+            window.ShowDialog();
         }
     }
 }

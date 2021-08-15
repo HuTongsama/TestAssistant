@@ -106,9 +106,115 @@ namespace TestClient
             }
         }
         private string _selectedTemplate = string.Empty;
-        public string X86Path { get; set; } = string.Empty;
-        public string X64Path { get; set; } = string.Empty;
-
+        private string _x86Path = string.Empty;
+        public string X86Path 
+        {
+            get
+            {
+                return _x86Path;
+            }
+            set
+            {
+                if (value != _x86Path)
+                {
+                    _x86Path = value;
+                    NotifyPropertyChanged("X86Path");
+                }
+            }
+        }
+        private string _x64Path = string.Empty;
+        public string X64Path 
+        {
+            get
+            {
+                return _x64Path;
+            }
+            set
+            {
+                if (value != _x64Path)
+                {
+                    _x64Path = value;
+                    NotifyPropertyChanged("X64Path");
+                }
+            }
+        }
+        private string _defaultTemplate = string.Empty;
+        public string DefaultTemplate
+        {
+            get 
+            {
+                return _defaultTemplate;
+            }
+            set
+            {
+                if (value != _defaultTemplate)
+                {
+                    _defaultTemplate = value;
+                }
+                NotifyPropertyChanged("DefaultTemplate");
+            }
+        }
+        private void OnX86PathButtonClick(object obj)
+        {
+            string path = OnPathButtonClicked();
+            if (path != null)
+            { 
+                X86Path = path;
+            }
+        }
+        private RelayCommand _x86PathButtonCommand;
+        public ICommand X86PathButtonCommand
+        {
+            get 
+            {
+                if (_x86PathButtonCommand == null)
+                {
+                    _x86PathButtonCommand = new RelayCommand(OnX86PathButtonClick, delegate { return true; });
+                }
+                return _x86PathButtonCommand;
+            }
+        }
+        private void OnX64PathButtonClick(object obj)
+        {
+            string path = OnPathButtonClicked();
+            if (path != null)
+            {
+                X64Path = path;
+            }
+        }
+        private RelayCommand _x64PathButtonCommand;
+        public ICommand X64PathButtonCommand
+        {
+            get 
+            {
+                if (_x64PathButtonCommand == null)
+                {
+                    _x64PathButtonCommand = new RelayCommand(OnX64PathButtonClick, delegate { return true; });
+                }
+                return _x64PathButtonCommand;
+            }
+        }
+        private void OnTemplateButtonClick(object obj)
+        {
+            string path = OnPathButtonClicked();
+            if (path != null)
+            {
+                DefaultTemplate = path;
+            }
+        }
+        private RelayCommand _defaultTemplateButtonCommand;
+        public ICommand DefaultTemplateTemplateButtonCommand
+        {
+            get
+            {
+                if (_defaultTemplateButtonCommand == null)
+                {
+                    _defaultTemplateButtonCommand = new RelayCommand(OnTemplateButtonClick, delegate { return true; });
+                }
+                return _defaultTemplateButtonCommand;
+            }
+        }
+        
         public TabItemViewModel(string header)
         {
             Header = header;

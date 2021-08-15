@@ -57,16 +57,16 @@
                         <RowDefinition Height="1*"></RowDefinition>
                     </Grid.RowDefinitions>
                     <Label Content="默认模板" Margin="0,30,0,30" Grid.Row="0" Grid.Column="0"></Label>
-                    <TextBox Text="" Margin="0,30,0,30" Grid.Row="0" Grid.Column="1"></TextBox>
-                    <Button Content=".." Margin="0,30,0,30" Grid.Row="0" Grid.Column="2"></Button>
+                    <TextBox Text="{Binding DefaultTemplate}" Margin="0,30,0,30" Grid.Row="0" Grid.Column="1"></TextBox>
+                    <Button Content=".." Command="{Binding DefaultTemplateTemplateButtonCommand}" Margin="0,30,0,30" Grid.Row="0" Grid.Column="2"></Button>
 
                     <Label Content="x86DllPath" Margin="0,30,0,30" Grid.Row="1" Grid.Column="0"></Label>
-                    <TextBox Text="" Margin="0,30,0,30" Grid.Row="1" Grid.Column="1"></TextBox>
-                    <Button Content=".." Margin="0,30,0,30" Grid.Row="1" Grid.Column="2"></Button>
+                    <TextBox Text="{Binding X86Path}" Margin="0,30,0,30" Grid.Row="1" Grid.Column="1"></TextBox>
+                    <Button Content=".." Command="{Binding X86PathButtonCommand}" Margin="0,30,0,30" Grid.Row="1" Grid.Column="2"></Button>
 
                     <Label Content="x64DllPath" Margin="0,30,0,30" Grid.Row="2" Grid.Column="0"></Label>
-                    <TextBox Text="" Margin="0,30,0,30" Grid.Row="2" Grid.Column="1"></TextBox>
-                    <Button Content=".." Margin="0,30,0,30" Grid.Row="2" Grid.Column="2"></Button>
+                    <TextBox Text="{Binding X64Path}" Margin="0,30,0,30" Grid.Row="2" Grid.Column="1"></TextBox>
+                    <Button Content=".." Command="{Binding X64PathButtonCommand}" Margin="0,30,0,30" Grid.Row="2" Grid.Column="2"></Button>
                 </Grid>
             </Grid>
         </ControlTemplate>
@@ -102,7 +102,7 @@
             <ColumnDefinition Width="383*"/>
             <ColumnDefinition Width="409*"/>
         </Grid.ColumnDefinitions>
-        <TabControl ItemsSource="{Binding TabItems.Values}" ItemContainerStyle="{StaticResource TabItemStyle}" SelectedIndex="0" 
+        <TabControl ItemsSource="{Binding TabItems.Values}" ItemContainerStyle="{StaticResource TabItemStyle}" SelectedItem="{Binding SelectedItem}" 
                     HorizontalAlignment="Left" Height="317" Margin="10,10,0,0" VerticalAlignment="Top" Width="659" Grid.ColumnSpan="2"></TabControl>
 
     </Grid>
