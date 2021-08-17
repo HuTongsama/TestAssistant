@@ -193,6 +193,15 @@ namespace TestServer
                             serverData.KeyToPictureSet.Add("1D", new List<string>() { "1.csv", "2.csv" });
                         if (!serverData.KeyToPictureSet.ContainsKey("2D"))
                             serverData.KeyToPictureSet.Add("2D", new List<string>() { "3.csv", "4.csv" });
+                        if (Enumerable.Count(serverData.DecodeTypeList,(decodeType)=> decodeType == TestDataType.File.ToString()) == 0)
+                        {
+                            serverData.DecodeTypeList.Add(TestDataType.File.ToString());
+                        }
+                        if (Enumerable.Count(serverData.DecodeTypeList, (decodeType) => decodeType == TestDataType.Buffer.ToString()) == 0)
+                        {
+                            serverData.DecodeTypeList.Add(TestDataType.Buffer.ToString());
+                        }
+                            
                     }
                     break;
                 case "DLR":

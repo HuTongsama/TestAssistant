@@ -73,14 +73,6 @@ namespace TestServer
                 }
             }
         }
-        private byte[] PackData(byte[] originData)
-        {
-            DataHead head = new DataHead();
-            head.DataLength = originData.Length;
-            byte[] headBuf = head.ToByteArray();
-            byte[] finalbuf = headBuf.Concat<Byte>(originData).ToArray();
-            return finalbuf;
-        }
         private void AcceptCallback(IAsyncResult ar)
         {
             Socket acceptSocket = _listenSocket.EndAccept(ar);

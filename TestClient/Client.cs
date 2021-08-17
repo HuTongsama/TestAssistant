@@ -23,7 +23,7 @@ namespace TestClient
             {              
                 IPHostEntry ipHostInfo = Dns.GetHostEntry("127.0.0.1");
                 
-                _ipAddress = ipHostInfo.AddressList[0];
+                _ipAddress = ipHostInfo.AddressList[1];
                
                _port = 8888;
                 _clientSocket = new Socket(_ipAddress.AddressFamily,
@@ -48,6 +48,12 @@ namespace TestClient
                 _recceiveString = _stringBuilder.ToString();
             return _recceiveString;
            
+        }
+
+        public void SendData(byte[] data)
+        {
+            byte[] finalData = PackData(data);
+            SyncSend(_clientSocket, data);
         }
         public void Connect()
         {

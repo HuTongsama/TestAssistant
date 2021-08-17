@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Data;
 using System.Threading;
+using System.Windows.Input;
 
 namespace TestClient
 {
@@ -22,20 +23,84 @@ namespace TestClient
         }
         public TabItemViewModel SelectedItem { get; set; } = null;
         private Client _client = new Client();
+        private ClientData _clientData = null;
+        private bool _needSendData = false;
+
+        private void OnPerformanceButtonClick(object obj)
+        {
+            ClientData data = GenerateClientData();
+            if (data != null)
+            { 
+                data.TestType = TestType.Performance.ToString();
+                _needSendData = true;
+            }
+        }
+        private RelayCommand _performanceButtonCommand;
+        public ICommand PerformanceButtonCommand
+        {
+            get 
+            {
+                if (_performanceButtonCommand == null)
+                {
+                    _performanceButtonCommand = new RelayCommand(OnPerformanceButtonClick,delegate { return true; });
+                }
+                return _performanceButtonCommand;
+            }
+        }
+        private void OnStabilityButtonClick(object obj)
+        {
+            ClientData data = GenerateClientData();
+            if (data != null)
+            {
+                data.TestType = TestType.Stability.ToString();
+                _needSendData = true;
+            }
+            
+        }
+        private RelayCommand _stabilityButtonCommand;
+        public ICommand StabilityButtonCommand
+        {
+            get 
+            {
+                if (_stabilityButtonCommand == null)
+                {
+                    _stabilityButtonCommand = new RelayCommand(OnStabilityButtonClick, delegate { return true; });
+                }
+                return _stabilityButtonCommand;
+            }
+        }
         public MainWindowViewModel()
         {
-            TabItemViewModel item = new TabItemViewModel("DBR");
-            _tabItems.Add("DBR", item);
+            string productName = ProductType.DBR.ToString();
+            TabItemViewModel item = new TabItemViewModel(productName);
+            _tabItems.Add(productName, item);
             SelectedItem = item;
-            item = new TabItemViewModel("DLR");
-            _tabItems.Add("DLR", item);
-            item = new TabItemViewModel("DCN");
-            _tabItems.Add("DCN", item);
+            
+            productName = ProductType.DLR.ToString();
+            item = new TabItemViewModel(productName);
+            _tabItems.Add(productName, item);
+
+            productName = ProductType.DCN.ToString();
+            item = new TabItemViewModel(productName);
+            _tabItems.Add(productName, item);
             Thread clientThread = new Thread(ClientThreadFunc);
             clientThread.Start();
 
         }
 
+        private void UpdateTabCollection(List<string> srcList, ObservableCollection<ListItem> listItems, SameListItem sameListItem)
+        {
+            App.Current.Dispatcher.Invoke((Action)delegate
+            {
+                foreach (var picSet in srcList)
+                {
+                    ListItem item = new ListItem(picSet);
+                    if (Enumerable.Contains(listItems, item, sameListItem))
+                        continue;
+                    listItems.Add(item);
+                }
+            });
+        }
         private void ClientThreadFunc()
         {
             _client.Connect();
@@ -45,6 +110,7 @@ namespace TestClient
                     continue;
                 if (!_client.IsConnected())
                     continue;
+                SendClientData();
                 string receiveData = _client.ReceiveData();
                 try
                 {
@@ -63,25 +129,11 @@ namespace TestClient
                             {
                                 TabItemViewModel curTab = _tabItems[key];
                                 SameListItem sameListItem = new SameListItem();
-                                App.Current.Dispatcher.Invoke((Action)delegate
-                                {
-                                    foreach (var picSet in serverData.PictureSetList)
-                                    {
-                                        ListItem item = new ListItem(picSet);
-                                        if (Enumerable.Contains(curTab.PictureSetList, item, sameListItem))
-                                            continue;
-                                        curTab.PictureSetList.Add(item);
-                                    }
-                                });
-
-                                foreach (var template in serverData.TemplateList)
-                                {
-                                    ListItem item = new ListItem(template);
-                                    if (Enumerable.Contains(curTab.TemplateSetList, item, sameListItem))
-                                        continue;
-                                    curTab.TemplateSetList.Add(item);
-                                }
-
+                               
+                                UpdateTabCollection(serverData.PictureSetList, curTab.PictureSetList, sameListItem);
+                                UpdateTabCollection(serverData.TemplateList, curTab.TemplateSetList, sameListItem);
+                                UpdateTabCollection(serverData.DecodeTypeList, curTab.DecodeTypeList, sameListItem);
+                               
                                 Dictionary<string, List<ListItem>> tmpKeyToPicSet = new Dictionary<string, List<ListItem>>();
                                 foreach (var keyPair in serverData.KeyToPictureSet)
                                 {
@@ -105,6 +157,60 @@ namespace TestClient
                     continue;
                 }
 
+            }
+        }
+        private ClientData GenerateClientData()
+        {
+            if (SelectedItem == null)
+                return null;
+            ClientData data = new ClientData();
+            data.ProductName = SelectedItem.Header;
+            foreach (var listItem in SelectedItem.SelectedPicList)
+            {
+                data.ImageCsvList.Add(listItem.ItemName);
+            }
+            
+            foreach (var keyPair in SelectedItem.PicToTemplate)
+            {
+                string template = keyPair.Value;
+                string csv = keyPair.Key;
+                if (!data.TemplateToCsvSet.ContainsKey(template))
+                {
+                    data.TemplateToCsvSet.Add(template,new List<string>());
+                    
+                }
+                data.TemplateToCsvSet[template].Add(csv);
+            }
+
+            foreach (var decodeType in SelectedItem.DecodeTypeList)
+            {
+                if (decodeType.IsSelected)
+                {
+                    data.TestDataType = decodeType.ItemName;
+                    break;
+                }
+            }
+            foreach (var template in SelectedItem.TemplateSetList)
+            {
+                if (template.IsSelected)
+                {
+                    data.DefaultTemplate = template.ItemName;
+                    break;
+                }
+            }
+            return data;
+        }
+        private void SendClientData()
+        {
+            if (_needSendData)
+            {
+                _needSendData = false;
+                if (_clientData == null)
+                    return;
+                //todo: up to ftp
+                string jsonString = JsonSerializer.Serialize(_clientData);
+                byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
+                _client.SendData(data);
             }
         }
     }

@@ -62,9 +62,10 @@ namespace TestClient
             }
         }
        
-        public List<ListItem> TemplateSetList { get; set; } = new List<ListItem>();
+        public ObservableCollection<ListItem> TemplateSetList { get; set; } = new ObservableCollection<ListItem>();
         public ObservableCollection<ListItem> PictureSetList { get; set; } = new ObservableCollection<ListItem>();
         public ObservableCollection<ListItem> SelectedPicList { get; set; } = new ObservableCollection<ListItem>();
+        public ObservableCollection<ListItem> DecodeTypeList { get; set; } = new ObservableCollection<ListItem>();
         private Dictionary<string, List<ListItem>> _keyToPicSet = new Dictionary<string, List<ListItem>>();
         public Dictionary<string, List<ListItem>> KeyToPicSet
         {
@@ -105,7 +106,11 @@ namespace TestClient
                 return _keyToCheckState;
             }
         }
-        private string _selectedTemplate = string.Empty;
+        private Dictionary<string, string> _picToTemplate = new Dictionary<string, string>();
+        public Dictionary<string, string> PicToTemplate
+        {
+            get => _picToTemplate;
+        }
         private string _x86Path = string.Empty;
         public string X86Path 
         {
@@ -138,22 +143,7 @@ namespace TestClient
                 }
             }
         }
-        private string _defaultTemplate = string.Empty;
-        public string DefaultTemplate
-        {
-            get 
-            {
-                return _defaultTemplate;
-            }
-            set
-            {
-                if (value != _defaultTemplate)
-                {
-                    _defaultTemplate = value;
-                }
-                NotifyPropertyChanged("DefaultTemplate");
-            }
-        }
+        
         private void OnX86PathButtonClick(object obj)
         {
             string path = OnPathButtonClicked();
@@ -194,26 +184,7 @@ namespace TestClient
                 return _x64PathButtonCommand;
             }
         }
-        private void OnTemplateButtonClick(object obj)
-        {
-            string path = OnPathButtonClicked();
-            if (path != null)
-            {
-                DefaultTemplate = path;
-            }
-        }
-        private RelayCommand _defaultTemplateButtonCommand;
-        public ICommand DefaultTemplateTemplateButtonCommand
-        {
-            get
-            {
-                if (_defaultTemplateButtonCommand == null)
-                {
-                    _defaultTemplateButtonCommand = new RelayCommand(OnTemplateButtonClick, delegate { return true; });
-                }
-                return _defaultTemplateButtonCommand;
-            }
-        }
+       
         
         public TabItemViewModel(string header)
         {
@@ -318,8 +289,21 @@ namespace TestClient
             }
         }
         private void UpdateSelectedTemplate(string template)
-        {
-            _selectedTemplate = template;
+        {           
+            foreach (var listItem in SelectedPicList)
+            {
+                string itemName = listItem.ItemName;
+                if (!listItem.IsSelected)
+                    continue;
+                if (_picToTemplate.ContainsKey(itemName))
+                {
+                    _picToTemplate[itemName] = template;
+                }
+                else
+                {
+                    _picToTemplate.Add(itemName, template);
+                }
+            }
         }
         private void SelectedItemRightClicked()
         {

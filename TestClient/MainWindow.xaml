@@ -1,21 +1,20 @@
-﻿<Window x:Class="TestClient.MainWindow"
+﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i ="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:TestClient"
+        xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2" x:Class="TestClient.MainWindow"
         mc:Ignorable="d"
         Title="MainWindow" Height="488" Width="873">
     <Window.Resources>
-        <Style x:Key="ListItemStyle" TargetType="ListBoxItem">
-            <Style.Setters>
-                <Setter Property="Content" Value="{Binding ItemName}"></Setter>
-                <Setter Property="IsSelected" Value="{Binding IsSelected}"></Setter>
-            </Style.Setters>
+        <Style x:Key="ListItemStyle" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="Content" Value="{Binding ItemName}"/>
+            <Setter Property="IsSelected" Value="{Binding IsSelected}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding UseCustomerRightClick}" Value="true">
-                    <Setter Property="local:ListItemAttachedBehaviour.MouseRightClickCommand" Value="{Binding MouseRightClickCommand}"></Setter>
+                    <Setter Property="local:ListItemAttachedBehaviour.MouseRightClickCommand" Value="{Binding MouseRightClickCommand}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -40,57 +39,78 @@
                     </ListView>
                     <ListBox ItemsSource="{Binding PictureSetList}" ItemContainerStyle="{StaticResource ListItemStyle}"
                                              SelectionMode="Multiple"/>
-                    
+
                 </Grid>
                 <ListBox ItemsSource="{Binding SelectedPicList}" ItemContainerStyle="{StaticResource ListItemStyle}" SelectionMode="Multiple"
-                                         HorizontalAlignment="Center" Height="256" Margin="0,10,0,10" VerticalAlignment="Top" Width="120" Grid.Column="1">
-                </ListBox>
+                                         HorizontalAlignment="Center" Height="256" Margin="0,10,0,10" VerticalAlignment="Top" Width="120" Grid.Column="1"/>
                 <Grid Height="256" Width="250" Margin="0,10,0,10" HorizontalAlignment="Center" VerticalAlignment="Top" Grid.Column="2">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="3*"></ColumnDefinition>
-                        <ColumnDefinition Width="5*"></ColumnDefinition>
-                        <ColumnDefinition Width="1*"></ColumnDefinition>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="5*"/>
+                        <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="1*"></RowDefinition>
-                        <RowDefinition Height="1*"></RowDefinition>
-                        <RowDefinition Height="1*"></RowDefinition>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
                     </Grid.RowDefinitions>
-                    <Label Content="默认模板" Margin="0,30,0,30" Grid.Row="0" Grid.Column="0"></Label>
-                    <TextBox Text="{Binding DefaultTemplate}" Margin="0,30,0,30" Grid.Row="0" Grid.Column="1"></TextBox>
-                    <Button Content=".." Command="{Binding DefaultTemplateTemplateButtonCommand}" Margin="0,30,0,30" Grid.Row="0" Grid.Column="2"></Button>
 
-                    <Label Content="x86DllPath" Margin="0,30,0,30" Grid.Row="1" Grid.Column="0"></Label>
-                    <TextBox Text="{Binding X86Path}" Margin="0,30,0,30" Grid.Row="1" Grid.Column="1"></TextBox>
-                    <Button Content=".." Command="{Binding X86PathButtonCommand}" Margin="0,30,0,30" Grid.Row="1" Grid.Column="2"></Button>
+                    <Label Content="默认模板" Margin="0,20,0,20" Grid.Row="0" Grid.Column="0"/>
+                    <ComboBox ItemsSource="{Binding TemplateSetList}" Margin="0,20,0,20" Grid.Row="0" Grid.Column="1">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ItemName}"></TextBlock>
+                                
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
-                    <Label Content="x64DllPath" Margin="0,30,0,30" Grid.Row="2" Grid.Column="0"></Label>
-                    <TextBox Text="{Binding X64Path}" Margin="0,30,0,30" Grid.Row="2" Grid.Column="1"></TextBox>
-                    <Button Content=".." Command="{Binding X64PathButtonCommand}" Margin="0,30,0,30" Grid.Row="2" Grid.Column="2"></Button>
+                    <Label Content="读图方式" Margin="0,20,0,20" Grid.Row="1" Grid.Column="0"/>
+                    <ComboBox ItemsSource="{Binding DecodeTypeList}" Margin="0,20,0,20" Grid.Row="1" Grid.Column="1">
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="ComboBoxItem">
+                                <Setter Property="IsSelected" Value="{Binding IsSelected}"></Setter>
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding ItemName}"></TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <Label Content="x86DllPath" Margin="0,20,0,20" Grid.Row="2" Grid.Column="0"/>
+                    <TextBox Text="{Binding X86Path}" Margin="0,20,0,20" Grid.Row="2" Grid.Column="1"/>
+                    <Button Content=".." Command="{Binding X86PathButtonCommand}" Margin="0,20,0,20" Grid.Row="2" Grid.Column="2"/>
+
+                    <Label Content="x64DllPath" Margin="0,20,0,20" Grid.Row="3" Grid.Column="0"/>
+                    <TextBox Text="{Binding X64Path}" Margin="0,20,0,20" Grid.Row="3" Grid.Column="1"/>
+                    <Button Content=".." Command="{Binding X64PathButtonCommand}" Margin="0,20,0,20" Grid.Row="3" Grid.Column="2"/>
                 </Grid>
             </Grid>
         </ControlTemplate>
-        <Style x:Key="TabItemStyle" TargetType="TabItem">
-            <Setter Property="Header" Value="{Binding Header}"></Setter>
+        <Style x:Key="TabItemStyle" TargetType="{x:Type TabItem}">
+            <Setter Property="Header" Value="{Binding Header}"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Header}" Value="DBR">
                     <Setter Property="Content">
                         <Setter.Value>
-                            <ContentControl Template="{StaticResource TabGridTemplate}"></ContentControl>
+                            <ContentControl Template="{StaticResource TabGridTemplate}"/>
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Header}" Value="DLR">
                     <Setter Property="Content">
                         <Setter.Value>
-                            <ContentControl Template="{StaticResource TabGridTemplate}"></ContentControl>
+                            <ContentControl Template="{StaticResource TabGridTemplate}"/>
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Header}" Value="DCN">
                     <Setter Property="Content">
                         <Setter.Value>
-                            <ContentControl Template="{StaticResource TabGridTemplate}"></ContentControl>
+                            <ContentControl Template="{StaticResource TabGridTemplate}"/>
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
@@ -103,7 +123,9 @@
             <ColumnDefinition Width="409*"/>
         </Grid.ColumnDefinitions>
         <TabControl ItemsSource="{Binding TabItems.Values}" ItemContainerStyle="{StaticResource TabItemStyle}" SelectedItem="{Binding SelectedItem}" 
-                    HorizontalAlignment="Left" Height="317" Margin="10,10,0,0" VerticalAlignment="Top" Width="659" Grid.ColumnSpan="2"></TabControl>
+                    HorizontalAlignment="Left" Height="317" Margin="10,10,0,0" VerticalAlignment="Top" Width="659" Grid.ColumnSpan="2"/>
+        <Button Content="稳定性测试" Command="{Binding StabilityButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="362,308,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button Content="性能测试" Command="{Binding PerformanceButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="274,308,0,0" VerticalAlignment="Top" Width="75"/>
 
     </Grid>
 </Window>

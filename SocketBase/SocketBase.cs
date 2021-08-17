@@ -121,6 +121,15 @@ namespace SocketBase
 
             return isConnected;
         }
+
+        protected byte[] PackData(byte[] originData)
+        {
+            DataHead head = new DataHead();
+            head.DataLength = originData.Length;
+            byte[] headBuf = head.ToByteArray();
+            byte[] finalbuf = headBuf.Concat<Byte>(originData).ToArray();
+            return finalbuf;
+        }
         //public void AsyncSend(Socket socket, byte[] byteData)
         //{           
         //    socket.BeginSend(byteData, 0, byteData.Length, 0,
