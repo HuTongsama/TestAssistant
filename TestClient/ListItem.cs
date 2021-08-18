@@ -15,7 +15,7 @@ namespace TestClient
             DependencyProperty.RegisterAttached("MouseRightClickCommand",
                 typeof(ICommand),
                 typeof(ListItemAttachedBehaviour),
-                new FrameworkPropertyMetadata(MousRightClickChanged));
+                new FrameworkPropertyMetadata(MouseRightClickChanged));
         public static void SetMouseRightClickCommand(DependencyObject target, ICommand value)
         {
             target.SetValue(ListItemAttachedBehaviour.MouseRightClickCommandProperty, value);
@@ -23,6 +23,20 @@ namespace TestClient
         public static ICommand GetMouseRightClickCommand(DependencyObject target)
         {
             return (ICommand)target.GetValue(ListItemAttachedBehaviour.MouseRightClickCommandProperty);
+        }
+
+        public static DependencyProperty MouseLeftClickCommandProperty =
+            DependencyProperty.RegisterAttached("MouseLeftClickCommand",
+                typeof(ICommand),
+                typeof(ListItemAttachedBehaviour),
+                new FrameworkPropertyMetadata(MouseLeftClickChanged));
+        public static void SetMouseLeftClickCommand(DependencyObject target, ICommand value)
+        {
+            target.SetValue(ListItemAttachedBehaviour.MouseLeftClickCommandProperty, value);
+        }
+        public static ICommand GetMouseLeftClickCommand(DependencyObject target)
+        {
+            return (ICommand)target.GetValue(ListItemAttachedBehaviour.MouseLeftClickCommandProperty);
         }
 
         public static DependencyProperty CommandParamProperty =
@@ -62,7 +76,7 @@ namespace TestClient
             command.Execute(element.GetValue(ListItemAttachedBehaviour.CommandParamProperty));
             e.Handled = true;
         }
-        private static void MousRightClickChanged(DependencyObject target,DependencyPropertyChangedEventArgs e)
+        private static void MouseRightClickChanged(DependencyObject target,DependencyPropertyChangedEventArgs e)
         {
             UIElement element = target as UIElement;
             if (element != null)
@@ -74,6 +88,29 @@ namespace TestClient
                 else if ((e.NewValue == null) && (e.OldValue != null))
                 {
                     element.PreviewMouseRightButtonDown -= ItemRightClicked;
+                }
+            }
+        }
+
+        private static void ItemLeftClicked(object sender, MouseEventArgs e)
+        {
+            UIElement element = sender as UIElement;
+            ICommand command = element.GetValue(ListItemAttachedBehaviour.MouseLeftClickCommandProperty) as ICommand;
+            command.Execute(element.GetValue(ListItemAttachedBehaviour.CommandParamProperty));
+            e.Handled = true;
+        }
+        private static void MouseLeftClickChanged(DependencyObject target, DependencyPropertyChangedEventArgs e)
+        {
+            UIElement element = target as UIElement;
+            if (element != null)
+            {
+                if ((e.NewValue != null) && (e.OldValue == null))
+                {
+                    element.PreviewMouseLeftButtonDown += ItemLeftClicked;
+                }
+                else if ((e.NewValue == null) && (e.OldValue != null))
+                {
+                    element.PreviewMouseLeftButtonDown -= ItemLeftClicked;
                 }
             }
         }
@@ -108,6 +145,7 @@ namespace TestClient
             }
         }
         public bool UseCustomerRightClick { get; set; } = false;
+        public bool UseCustomerLeftClick { get; set; } = false;
         public Action OwnerCallBack { get; set; } = delegate { };
         private void MouseRightClick(object obj)
         {
@@ -124,6 +162,22 @@ namespace TestClient
                     _mouseRightClickCommand = new RelayCommand(MouseRightClick, delegate { return true; });
                 }
                 return _mouseRightClickCommand;
+            }
+        }
+        private void MouseLeftClick(object obj)
+        {
+            IsSelected = !IsSelected;
+        }
+        private RelayCommand _mouseLeftClickCommand;
+        public ICommand MouseLeftClickCommand
+        {
+            get 
+            {
+                if (_mouseLeftClickCommand == null)
+                {
+                    _mouseLeftClickCommand = new RelayCommand(MouseLeftClick, delegate { return true; });
+                }
+                return _mouseLeftClickCommand;
             }
         }
         public ListItem(string itemName = null, bool isSelected = false)

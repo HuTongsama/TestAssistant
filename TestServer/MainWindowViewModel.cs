@@ -34,6 +34,8 @@ namespace TestServer
             }
         }
         private Dictionary<string, ServerData> _keyToData = new Dictionary<string, ServerData>();
+        private Queue<TestItem> _itemWaitQueue = new Queue<TestItem>();
+        private readonly object _itemWaitQueueLock = new object();
         public MainWindowViewModel()
         {
             _listener = new Listener();
@@ -41,13 +43,16 @@ namespace TestServer
             _testProcess = new TestProcess();
             _endCurrentTest = false;
             _tabItems = new ObservableCollection<TabItemViewModelBase>();
-            TabItemViewModelBase item = new TabItemViewModelBase("DBR");
+            string productName = ProductType.DBR.ToString();
+            TabItemViewModelBase item = new TabItemViewModelBase(productName);
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
-            item = new DLRTabItemViewModel("DLR");
+            productName = ProductType.DLR.ToString();
+            item = new DLRTabItemViewModel(productName);
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
-            item = new TabItemViewModelBase("DCN");
+            productName = ProductType.DCN.ToString();
+            item = new TabItemViewModelBase(productName);
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);           
         }

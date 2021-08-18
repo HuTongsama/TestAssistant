@@ -31,7 +31,7 @@ namespace TestClient
             ClientData data = GenerateClientData();
             if (data != null)
             { 
-                data.TestType = TestType.Performance.ToString();
+                data.OperateType = OperateType.Performance.ToString();
                 _needSendData = true;
             }
         }
@@ -52,7 +52,7 @@ namespace TestClient
             ClientData data = GenerateClientData();
             if (data != null)
             {
-                data.TestType = TestType.Stability.ToString();
+                data.OperateType = OperateType.Stability.ToString();
                 _needSendData = true;
             }
             

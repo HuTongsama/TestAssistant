@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace Data
 {
-    public enum TestType
+    public enum OperateType
     {
         Performance = 0,
-        Stability
+        Stability,
+        Compare
     }
     public enum TestDataType
     {
@@ -25,7 +26,7 @@ namespace Data
     }
     public class ClientData
     {
-        public string TestType { get; set; } = string.Empty;
+        public string OperateType { get; set; } = string.Empty;
         public string TestDataType { get; set; } = string.Empty;
         //public string ImageSourcePath { get; set; } = string.Empty;
         //public string TemplatePath { get; set; } = string.Empty;

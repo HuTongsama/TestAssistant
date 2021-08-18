@@ -66,6 +66,10 @@ namespace TestClient
         public ObservableCollection<ListItem> PictureSetList { get; set; } = new ObservableCollection<ListItem>();
         public ObservableCollection<ListItem> SelectedPicList { get; set; } = new ObservableCollection<ListItem>();
         public ObservableCollection<ListItem> DecodeTypeList { get; set; } = new ObservableCollection<ListItem>();
+        public ObservableCollection<ListItem> TestVersionList { get; set; } = new ObservableCollection<ListItem>();
+        public ListItem SelectedTestVersion { get; set; } = new ListItem();
+        public ObservableCollection<ListItem> StandardVersionList { get; set; } = new ObservableCollection<ListItem>();
+        public ListItem SelectedStandardVersion { get; set; } = new ListItem();
         private Dictionary<string, List<ListItem>> _keyToPicSet = new Dictionary<string, List<ListItem>>();
         public Dictionary<string, List<ListItem>> KeyToPicSet
         {
@@ -184,13 +188,64 @@ namespace TestClient
                 return _x64PathButtonCommand;
             }
         }
-       
-        
+        private void OnAddStandardButtonClick(object obj)
+        {
+            if (SelectedTestVersion != null)
+            {
+                ListItem item = new ListItem(SelectedTestVersion.ItemName);               
+                StandardVersionList.Add(item);
+                TestVersionList.Remove(SelectedTestVersion);
+            }
+        }
+        private RelayCommand _addStandardCommand;
+        public ICommand AddStandardCommand
+        {
+            get
+            {
+                if (_addStandardCommand == null)
+                {
+                    _addStandardCommand = new RelayCommand(OnAddStandardButtonClick, delegate { return true; });
+                }
+                return _addStandardCommand;
+            }
+        }
+        private void OnRemoveStandardButtonClick(object obj)
+        {
+            if (SelectedStandardVersion != null)
+            {
+                ListItem item = new ListItem(SelectedStandardVersion.ItemName);
+                TestVersionList.Add(item);
+                StandardVersionList.Remove(SelectedStandardVersion);
+            }
+        }
+        private RelayCommand _removeStandardCommand;
+        public ICommand RemoveStandardCommand
+        {
+            get 
+            {
+                if (_removeStandardCommand == null)                
+                {
+                    _removeStandardCommand = new RelayCommand(OnRemoveStandardButtonClick, delegate { return true; });
+                }
+                return _removeStandardCommand;
+            }
+        }
         public TabItemViewModel(string header)
         {
             Header = header;
             PictureSetList.CollectionChanged += PictureSetListChanged;
             SelectedPicList.CollectionChanged += SelectedSetListChanged;
+            ListItem item = new ListItem("123");
+            item.UseCustomerLeftClick = true;
+            
+            TestVersionList.Add(item);
+            item = new ListItem("234");
+            item.UseCustomerLeftClick = true;
+            
+            TestVersionList.Add(item);
+            item = new ListItem("789");
+            item.UseCustomerLeftClick = true;
+            StandardVersionList.Add(item);
         }
 
         private void UpdateSelectedPicList(ListItem item, bool isAdd, EqualityComparer<ListItem> comparer)
