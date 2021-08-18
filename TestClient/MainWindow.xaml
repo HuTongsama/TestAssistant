@@ -267,9 +267,6 @@
                     HorizontalAlignment="Left" Height="451" Margin="10,10,0,0" VerticalAlignment="Top" Width="996" Grid.ColumnSpan="2"/>
         <Button Content="稳定性测试" Command="{Binding StabilityButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="342,516,0,0" VerticalAlignment="Top" Width="75"/>
         <Button Content="性能测试" Command="{Binding PerformanceButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="219,516,0,0" VerticalAlignment="Top" Width="75"/>
-        <ListBox HorizontalAlignment="Left" Height="100" Margin="146,466,0,0" VerticalAlignment="Top" Width="100">
-            <ListBoxItem Content="ListBoxItem" Style="{DynamicResource ListBoxItemStyle1}"/>
-        </ListBox>
 
 
     </Grid>
