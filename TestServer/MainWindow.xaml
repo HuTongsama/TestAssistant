@@ -28,7 +28,7 @@
                                 <Label Content="图集:" Grid.Row="0" Grid.Column="0" VerticalContentAlignment="Center"></Label>
                                 <TextBox Text="{Binding PictureSetPath}" Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
                                 <Button Content="..." Command="{Binding PicSetPathButtonClicked}" Grid.Row="0" Grid.Column="2"></Button>
-                                
+
                                 <Label Content="模板:" Grid.Row="1" Grid.Column="0" VerticalContentAlignment="Center"></Label>
                                 <TextBox Text="{Binding TemplatePath}" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
                                 <Button Content="..." Command="{Binding TemplatePathButtonClicked}" Grid.Row="1" Grid.Column="2"></Button>
@@ -93,8 +93,39 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <Button x:Name="StartButton" Command="{Binding StartButtonCommand}" Content="Button" HorizontalAlignment="Left" Margin="148,277,0,0" VerticalAlignment="Top" Width="75"/>
-        <Button x:Name="EndButton" Command="{Binding EndButtonCommand}" Content="Button" HorizontalAlignment="Left" Margin="327,277,0,0" VerticalAlignment="Top" Width="75"/>
-        <TabControl ItemsSource="{Binding TabItems}" ItemContainerStyle="{StaticResource TabItemStyle}" SelectedIndex="0" HorizontalAlignment="Left" Height="100" Margin="10,10,0,0" VerticalAlignment="Top" Width="287"></TabControl>
+        <Button x:Name="StartButton" Command="{Binding StartButtonCommand}" Content="StartButton" HorizontalAlignment="Left" Margin="506,365,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="4.027,-0.474"/>
+        <Button x:Name="EndButton" Command="{Binding EndButtonCommand}" Content="EndButton" HorizontalAlignment="Left" Margin="639,365,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="1.093,5.842"/>
+        <TabControl ItemsSource="{Binding TabItems}" ItemContainerStyle="{StaticResource TabItemStyle}" SelectedIndex="0" HorizontalAlignment="Left" Height="172" Margin="10,10,0,0" VerticalAlignment="Top" Width="446"></TabControl>
+        <Grid HorizontalAlignment="Left" Height="199" Margin="10,199,0,0" VerticalAlignment="Top" Width="446">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="5*"/>
+            </Grid.RowDefinitions>
+            <Label Content="测试队列" Grid.Row="0" Grid.Column="0"/>
+            <ListBox ItemsSource="{Binding TestWaitList}" Grid.Row="1" Grid.Column="0" 
+                     HorizontalAlignment="Left" Height="150" Margin="10,0,10,0" VerticalAlignment="Top" Width="188">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding VersionInfo}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <Label Content="比较队列" Grid.Row="0" Grid.Column="1"/>
+            <ListBox ItemsSource="{Binding CompareWaitList}" Grid.Row="1" Grid.Column="1" 
+                     HorizontalAlignment="Left" Height="150" Margin="10,0,10,0" VerticalAlignment="Top" Width="188">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding VersionInfo}" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+        <TextBlock ScrollViewer.VerticalScrollBarVisibility="Visible" HorizontalAlignment="Left" Margin="506,42,0,0" TextWrapping="Wrap" Text="{Binding ConsoleMessage}" VerticalAlignment="Top" Width="219" Height="285"/>
+        <Label Content="Message" HorizontalAlignment="Left" Margin="506,9,0,0" VerticalAlignment="Top" Width="133"/>
     </Grid>
 </Window>

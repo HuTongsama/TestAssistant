@@ -24,16 +24,23 @@ namespace Data
         DLR,
         DCN
     }
-    public class ClientData
+    public class ClientData:IComparable<ClientData>
     {
-        public string OperateType { get; set; } = string.Empty;
-        public string TestDataType { get; set; } = string.Empty;
-        //public string ImageSourcePath { get; set; } = string.Empty;
-        //public string TemplatePath { get; set; } = string.Empty;
-        public string ProductName { get; set; } = string.Empty;
+        public OperateType OperateType { get; set; } = OperateType.Performance;
+        public TestDataType TestDataType { get; set; } = TestDataType.Buffer;
+        public ProductType ProductType { get; set; } = ProductType.DBR;
         public string DefaultTemplate { get; set; } = string.Empty;
+        public string TestVersion { get; set; } = string.Empty;
+        public string StandardVersion { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
+        public DateTime UploadTime { get; set; } = new DateTime();
+        public string VersionInfo { get; set; } = string.Empty;
         public List<string> ImageCsvList { get; set; } = new List<string>();
-        public Dictionary<string, List<string>> TemplateToCsvSet = new Dictionary<string, List<string>>(); 
-        
+        public Dictionary<string, List<string>> TemplateToCsvSet = new Dictionary<string, List<string>>();
+
+        public int CompareTo(ClientData other)
+        {
+            return UploadTime.CompareTo(other.UploadTime);
+        }
     }
 }

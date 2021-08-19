@@ -42,18 +42,25 @@ namespace TestClient
         public string ReceiveData()
         {
             if (_clientSocket == null)
-                return string.Empty;         
-            int receiveLength = SyncReceive(_clientSocket);
-            if (receiveLength > 0)
-                _recceiveString = _stringBuilder.ToString();
-            return _recceiveString;
+                return string.Empty;
+            if (_clientSocket.Available > 0)
+            {
+                int receiveLength = SyncReceive(_clientSocket);
+                if (receiveLength > 0)
+                    _recceiveString = _stringBuilder.ToString();
+                return _recceiveString;
+            }
+            else 
+            {
+                return string.Empty;
+            }
            
         }
 
         public void SendData(byte[] data)
         {
             byte[] finalData = PackData(data);
-            SyncSend(_clientSocket, data);
+            SyncSend(_clientSocket, finalData);
         }
         public void Connect()
         {

@@ -9,6 +9,7 @@ using SocketBase;
 using Data;
 using System.Windows;
 using System.Threading;
+using System.Text.Json;
 
 namespace TestServer
 {
@@ -16,6 +17,7 @@ namespace TestServer
     {
         private Socket _listenSocket;
         private List<Socket> _clientSockets;
+        private readonly object _clientsLock = new object();
         private List<TestItem> _itemList;
         public List<TestItem> ItemList
         {
@@ -27,6 +29,8 @@ namespace TestServer
         }      
         private string _recceiveString = string.Empty;
         public Func<string> GennerateMessage { get; set; }
+        public Action<List<ClientData>> TestListCallback { get; set; }
+        public Action<List<ClientData>> CompareListCallback { get; set; }
         public Listener()
         {
             _clientSockets = new List<Socket>();
@@ -73,10 +77,59 @@ namespace TestServer
                 }
             }
         }
+        public void ReceiveMessage()
+        {
+            List<ClientData> compareList = new List<ClientData>();
+            List<ClientData> testList = new List<ClientData>();
+            while (true)
+            {
+                compareList.Clear();
+                testList.Clear();
+                for (int index = 0; index < _clientSockets.Count; ++index)
+                {
+                    Socket socket = _clientSockets[index];
+                    if (IsConnected(socket))
+                    {
+                        if (socket.Available > 0)
+                        { 
+                            int receiveLength = SyncReceive(socket);
+                            if (receiveLength > 0)
+                            {
+                                string message = _stringBuilder.ToString();
+                                ClientData clientData = JsonSerializer.Deserialize<ClientData>(message);
+                                if (clientData.OperateType == OperateType.Compare)
+                                {
+                                    compareList.Add(clientData);
+                                }
+                                else if (clientData.OperateType == OperateType.Performance ||
+                                    clientData.OperateType == OperateType.Stability)
+                                {
+                                    testList.Add(clientData);
+                                }
+                            }
+                            
+                        }
+                    }
+                    else
+                    {
+                        lock (_clientsLock)
+                        {
+                            _clientSockets.RemoveAt(index);
+                            index--;
+                        }
+                    }
+                }
+                CompareListCallback(compareList);
+                TestListCallback(testList);
+            }
+        }
         private void AcceptCallback(IAsyncResult ar)
         {
             Socket acceptSocket = _listenSocket.EndAccept(ar);
-            _clientSockets.Add(acceptSocket);
+            lock (_clientsLock)
+            { 
+                _clientSockets.Add(acceptSocket);
+            }
             string message = GennerateMessage();
             byte[] messageBuf = System.Text.Encoding.ASCII.GetBytes(message);
             byte[] finalBuf = PackData(messageBuf);          
@@ -84,6 +137,7 @@ namespace TestServer
             _listenSocket.BeginAccept(AcceptCallback, _listenSocket);
 
         }
+        
         private void GenerateItemList()
         {
             _itemList.Clear();

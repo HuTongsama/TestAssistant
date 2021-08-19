@@ -31,8 +31,9 @@ namespace TestClient
             ClientData data = GenerateClientData();
             if (data != null)
             { 
-                data.OperateType = OperateType.Performance.ToString();
+                data.OperateType = OperateType.Performance;
                 _needSendData = true;
+                _clientData = data;
             }
         }
         private RelayCommand _performanceButtonCommand;
@@ -52,8 +53,9 @@ namespace TestClient
             ClientData data = GenerateClientData();
             if (data != null)
             {
-                data.OperateType = OperateType.Stability.ToString();
+                data.OperateType = OperateType.Stability;
                 _needSendData = true;
+                _clientData = data;
             }
             
         }
@@ -67,6 +69,15 @@ namespace TestClient
                     _stabilityButtonCommand = new RelayCommand(OnStabilityButtonClick, delegate { return true; });
                 }
                 return _stabilityButtonCommand;
+            }
+        }
+        private void OnCompareButtonClick(object obj)
+        {
+            ClientData data = GenerateClientData();
+            if (data != null)
+            {
+                data.OperateType = OperateType.Compare;
+                _needSendData = true;
             }
         }
         public MainWindowViewModel()
@@ -84,6 +95,7 @@ namespace TestClient
             item = new TabItemViewModel(productName);
             _tabItems.Add(productName, item);
             Thread clientThread = new Thread(ClientThreadFunc);
+            clientThread.IsBackground = true;
             clientThread.Start();
 
         }
@@ -164,7 +176,7 @@ namespace TestClient
             if (SelectedItem == null)
                 return null;
             ClientData data = new ClientData();
-            data.ProductName = SelectedItem.Header;
+            data.ProductType = (ProductType)Enum.Parse(typeof(ProductType), SelectedItem.Header);
             foreach (var listItem in SelectedItem.SelectedPicList)
             {
                 data.ImageCsvList.Add(listItem.ItemName);
@@ -186,7 +198,7 @@ namespace TestClient
             {
                 if (decodeType.IsSelected)
                 {
-                    data.TestDataType = decodeType.ItemName;
+                    data.TestDataType = (TestDataType)Enum.Parse(typeof(TestDataType), decodeType.ItemName);
                     break;
                 }
             }
@@ -198,6 +210,17 @@ namespace TestClient
                     break;
                 }
             }
+            if (SelectedItem.SelectedTestVersion != null)
+            {
+                data.TestVersion = SelectedItem.SelectedTestVersion.ItemName;
+            }
+            if (SelectedItem.SelectedStandardVersion != null)
+            {
+                data.StandardVersion = SelectedItem.SelectedStandardVersion.ItemName;
+            }
+            data.UserName = Environment.UserName;
+            data.UploadTime = DateTime.Now;
+            data.VersionInfo = "_v_" + data.UploadTime.ToString("yyMMdd_HHmmss") + "_" + data.UserName;
             return data;
         }
         private void SendClientData()

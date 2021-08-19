@@ -20,7 +20,7 @@ namespace TestServer
     {
         private Listener _listener;
         private TestProcess _testProcess;
-        private bool _endCurrentTest;
+        private bool _endCurrentTest = false;
         private ObservableCollection<TabItemViewModelBase> _tabItems;
         public ObservableCollection<TabItemViewModelBase> TabItems
         {
@@ -34,12 +34,31 @@ namespace TestServer
             }
         }
         private Dictionary<string, ServerData> _keyToData = new Dictionary<string, ServerData>();
-        private Queue<TestItem> _itemWaitQueue = new Queue<TestItem>();
-        private readonly object _itemWaitQueueLock = new object();
+        public ObservableCollection<ClientData> TestWaitList { get; set; } = new ObservableCollection<ClientData>();        
+        private readonly object _testWaitListLock = new object();
+        public ObservableCollection<ClientData> CompareWaitList { get; set; } = new ObservableCollection<ClientData>();     
+        private readonly object _compareWaitListLock = new object();
+        private string _consoleMessage = string.Empty;
+        public string ConsoleMessage
+        {
+            get => _consoleMessage;
+            set 
+            {
+                if (value != _consoleMessage)
+                {
+                    _consoleMessage = value;
+                    NotifyPropertyChanged("ConsoleMessage");
+                }
+            }
+        }
+
         public MainWindowViewModel()
         {
             _listener = new Listener();
             _listener.GennerateMessage = GenerateMessage;
+            _listener.TestListCallback = UpdateTestListCallback;
+            _listener.CompareListCallback = UpdateCompareListCallback;
+
             _testProcess = new TestProcess();
             _endCurrentTest = false;
             _tabItems = new ObservableCollection<TabItemViewModelBase>();
@@ -54,14 +73,22 @@ namespace TestServer
             productName = ProductType.DCN.ToString();
             item = new TabItemViewModelBase(productName);
             item.PropertyChanged += this.TabItemPropertyChanged;
-            _tabItems.Add(item);           
+            _tabItems.Add(item);
+          
         }
         private void OnStartButtonClicked(object obj)
-        {
-            var thread1 = new Thread(_listener.StartListening);
-            thread1.Start();
-            //var thread2 = new Thread(StartTest);
-            //thread2.Start();          
+        {          
+            var listeningThread = new Thread(_listener.StartListening);
+            listeningThread.IsBackground = true;
+            listeningThread.Start();
+
+            var receiveThread = new Thread(_listener.ReceiveMessage);
+            receiveThread.IsBackground = true;
+            receiveThread.Start();
+
+            var testThread = new Thread(StartTest);
+            testThread.IsBackground = true;
+            testThread.Start();
         }
         private RelayCommand _startButtonCommand;
         public ICommand StartButtonCommand
@@ -93,53 +120,117 @@ namespace TestServer
         }
         private void StartTest()
         {
-            Process myProcess = Process.Start("Test.exe");
+            //Process myProcess = Process.Start("Test.exe");
+            //while (true)
+            //{
+            //    if (myProcess.HasExited)
+            //    {
+            //        MessageBox.Show(string.Format("succeed to exit {0}",myProcess.ExitCode));
+            //        break;
+            //    }
+            //    if (_endCurrentTest)
+            //    {
+            //        myProcess.Kill();
+            //        myProcess.WaitForExit();
+            //        MessageBox.Show(string.Format("end current Test"));
+            //        break;
+            //    }
+                
+            //}
             while (true)
             {
-                if (myProcess.HasExited)
+                if (TestWaitList.Count > 0)
                 {
-                    MessageBox.Show(string.Format("succeed to exit {0}",myProcess.ExitCode));
-                    break;
+                    ClientData data = null;
+                    lock (_testWaitListLock)
+                    {
+                        data = TestWaitList[0];
+                        App.Current.Dispatcher.Invoke((Action)delegate
+                       {
+                           TestWaitList.RemoveAt(0);
+                       });                      
+                    }
+                    if (data != null)
+                    {
+                        string logInfo = ConsoleMessage + "start test " + data.VersionInfo + "\n";
+                        ConsoleMessage = logInfo;
+                        while (true)
+                        {
+                            if (_endCurrentTest)
+                            {
+                                //kill process
+                                break;
+                            }
+                        }
+                        if (!_endCurrentTest)
+                        {
+                            if (data.StandardVersion != string.Empty)
+                            {
+                                data.OperateType = OperateType.Compare;
+                                lock (_compareWaitListLock)
+                                {
+                                    CompareWaitList.Add(data);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            _endCurrentTest = false;
+                        }
+                        logInfo = ConsoleMessage + "test " + data.VersionInfo + " finished" + "\n";
+                        ConsoleMessage = logInfo;
+                        CallCompare();
+                        CallGetPicture();
+                    }
                 }
-                if (_endCurrentTest)
+            }
+            //while (true)
+            //{
+            //    var testList = _listener.ItemList;
+            //    //todo: update ui
+            //    foreach (var item in testList)
+            //    {
+            //        _endCurrentTest = false;
+            //        //todo: download dll from ftp
+            //        Process curProcess = Process.Start("Test.exe");
+            //        if (curProcess == null)
+            //            continue;
+            //        int exitCode = WaitProcess(curProcess);
+            //        if (exitCode == 0)
+            //        {
+            //            curProcess = Process.Start("Conclustion.exe");
+            //            if (curProcess == null)
+            //                continue;
+            //            exitCode = WaitProcess(curProcess);
+            //        }
+            //        if (exitCode == 0)
+            //        {
+            //            curProcess = Process.Start("GetPicture.exe");
+            //            if (curProcess == null)
+            //                continue;
+            //            exitCode = WaitProcess(curProcess);
+            //        }
+            //        //todo: _listener send message
+            //    }
+            //}
+        }
+        private void CallCompare()
+        {
+            lock (_compareWaitListLock)
+            {
+                foreach (var data in CompareWaitList)
                 {
-                    myProcess.Kill();
-                    myProcess.WaitForExit();
-                    MessageBox.Show(string.Format("end current Test"));
-                    break;
+                    //to compare
                 }
+                App.Current.Dispatcher.Invoke((Action)delegate
+               {
+                   CompareWaitList.Clear();
+               });
                 
             }
-            while (true)
-            {
-                var testList = _listener.ItemList;
-                //todo: update ui
-                foreach (var item in testList)
-                {
-                    _endCurrentTest = false;
-                    //todo: download dll from ftp
-                    Process curProcess = Process.Start("Test.exe");
-                    if (curProcess == null)
-                        continue;
-                    int exitCode = WaitProcess(curProcess);
-                    if (exitCode == 0)
-                    {
-                        curProcess = Process.Start("Conclustion.exe");
-                        if (curProcess == null)
-                            continue;
-                        exitCode = WaitProcess(curProcess);
-                    }
-                    if (exitCode == 0)
-                    {
-                        curProcess = Process.Start("GetPicture.exe");
-                        if (curProcess == null)
-                            continue;
-                        exitCode = WaitProcess(curProcess);
-                    }
-                    //todo: _listener send message
-                }
-            }
         }
+        private void CallGetPicture()
+        { }
         private int WaitProcess(Process process)
         {
             while (true)
@@ -227,6 +318,34 @@ namespace TestServer
             string jsonString = JsonSerializer.Serialize(_keyToData);
             return jsonString;
             
+        }
+        private void UpdateTestListCallback(List<ClientData> dataList)
+        {
+            if (dataList == null || dataList.Count == 0)
+                return;
+            lock (_testWaitListLock)
+            {
+                App.Current.Dispatcher.Invoke((Action)delegate
+                {
+                    foreach (var data in dataList)
+                    {
+                        TestWaitList.Add(data);
+                    }
+                });
+                
+            }
+        }
+        private void UpdateCompareListCallback(List<ClientData> dataList)
+        {
+            if (dataList == null || dataList.Count == 0)
+                return;
+            lock (_compareWaitListLock)
+            {
+                foreach (var data in dataList)
+                {
+                    CompareWaitList.Add(data);
+                }
+            }
         }
     }
 }
