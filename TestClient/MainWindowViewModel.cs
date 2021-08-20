@@ -10,6 +10,8 @@ using System.Text.Json.Serialization;
 using Data;
 using System.Threading;
 using System.Windows.Input;
+using System.IO;
+using FTP;
 
 namespace TestClient
 {
@@ -25,12 +27,14 @@ namespace TestClient
         private Client _client = new Client();
         private ClientData _clientData = null;
         private bool _needSendData = false;
+        private string _ftpCachePath = "Users/hutong/cache";
 
         private void OnPerformanceButtonClick(object obj)
         {
             ClientData data = GenerateClientData();
-            if (data != null)
-            { 
+            if (UploadDll() && data != null)
+            {
+                data.FtpCachePath = _ftpCachePath;
                 data.OperateType = OperateType.Performance;
                 _needSendData = true;
                 _clientData = data;
@@ -51,13 +55,14 @@ namespace TestClient
         private void OnStabilityButtonClick(object obj)
         {
             ClientData data = GenerateClientData();
-            if (data != null)
+            if (UploadDll() && data != null)
             {
+                data.FtpCachePath = _ftpCachePath;
                 data.OperateType = OperateType.Stability;
                 _needSendData = true;
                 _clientData = data;
             }
-            
+
         }
         private RelayCommand _stabilityButtonCommand;
         public ICommand StabilityButtonCommand
@@ -235,6 +240,32 @@ namespace TestClient
                 byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
                 _client.SendData(data);
             }
+        }
+        private bool UploadDll()
+        {
+            List<string> dllPathList = new List<string>();
+            if (SelectedItem.X64Path != string.Empty)
+                dllPathList.Add(SelectedItem.X64Path);
+            if (SelectedItem.X86Path != string.Empty)
+                dllPathList.Add(SelectedItem.X86Path);
+            FTPHelper ftpHelper = new FTPHelper();
+            if (ftpHelper.MakeDirectory(_ftpCachePath))
+            {
+                foreach (var path in dllPathList)
+                {
+                    DirectoryInfo dirInfo = new DirectoryInfo(SelectedItem.X64Path);
+                    FileInfo[] files = dirInfo.GetFiles("*.dll", SearchOption.AllDirectories);
+                    foreach (var file in files)
+                    {
+                        ftpHelper.Upload(file, _ftpCachePath);
+                    }
+                }
+            }
+            else
+            {
+                return false;
+            }
+            return true;
         }
     }
 }
