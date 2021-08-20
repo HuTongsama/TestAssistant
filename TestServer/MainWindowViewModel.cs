@@ -152,7 +152,7 @@ namespace TestServer
                     }
                     if (data != null)
                     {
-                        string logInfo = ConsoleMessage + "start test " + data.VersionInfo + "\n";
+                        string logInfo = ConsoleMessage + "\nStart test " + data.VersionInfo + "\n";
                         ConsoleMessage = logInfo;
                         while (true)
                         {
@@ -177,7 +177,7 @@ namespace TestServer
                         {
                             _endCurrentTest = false;
                         }
-                        logInfo = ConsoleMessage + "test " + data.VersionInfo + " finished" + "\n";
+                        logInfo = ConsoleMessage + "\nTest " + data.VersionInfo + " finished" + "\n";
                         ConsoleMessage = logInfo;
                         CallCompare();
                         CallGetPicture();
