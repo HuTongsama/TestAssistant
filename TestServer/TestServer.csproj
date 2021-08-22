@@ -59,6 +59,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AutoTestJson.cs" />
     <Compile Include="MainWindowViewModel.cs" />
     <Compile Include="TabItemViewModel.cs" />
     <Compile Include="TestProcess.cs" />

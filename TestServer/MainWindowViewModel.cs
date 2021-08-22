@@ -347,5 +347,36 @@ namespace TestServer
                 }
             }
         }
+        private AutoTestJson TransClientToJson(ClientData data)
+        {
+            AutoTestJson autoTestJson = null;
+            ProductType productType = data.ProductType;
+            OperateType operateType = data.OperateType;
+            TabItemViewModel productTab = null;
+            foreach (var tab in TabItems)
+            {
+                if (tab.Header == productType.ToString())
+                {
+                    productTab = tab;
+                    break;
+                }
+            }
+            if (productTab == null)
+            {
+                return autoTestJson;
+            }
+            autoTestJson = new AutoTestJson();
+            if (operateType == OperateType.Performance)
+                autoTestJson.FilePath = productTab.PictureSetPath;
+            else if (operateType == OperateType.Stability)
+                autoTestJson.FilePath = "";
+            autoTestJson.TemplatePath = productTab.TemplatePath;
+            string templateName = string.Empty;
+            if (productType == ProductType.DBR)
+                templateName = "Test1";
+            else if (productType == ProductType.DLR)
+                templateName = "locr";
+            return autoTestJson;
+        }
     }
 }
