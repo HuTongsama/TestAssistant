@@ -12,6 +12,7 @@ using System.Threading;
 using System.Windows.Input;
 using System.IO;
 using FTP;
+using System.Windows;
 
 namespace TestClient
 {
@@ -32,13 +33,7 @@ namespace TestClient
         private void OnPerformanceButtonClick(object obj)
         {
             ClientData data = GenerateClientData();
-            if (UploadDll() && data != null)
-            {
-                data.FtpCachePath = _ftpCachePath;
-                data.OperateType = OperateType.Performance;
-                _needSendData = true;
-                _clientData = data;
-            }
+            ButtonClickAction(data, OperateType.Performance);          
         }
         private RelayCommand _performanceButtonCommand;
         public ICommand PerformanceButtonCommand
@@ -55,13 +50,7 @@ namespace TestClient
         private void OnStabilityButtonClick(object obj)
         {
             ClientData data = GenerateClientData();
-            if (UploadDll() && data != null)
-            {
-                data.FtpCachePath = _ftpCachePath;
-                data.OperateType = OperateType.Stability;
-                _needSendData = true;
-                _clientData = data;
-            }
+            ButtonClickAction(data, OperateType.Stability);
 
         }
         private RelayCommand _stabilityButtonCommand;
@@ -79,11 +68,7 @@ namespace TestClient
         private void OnCompareButtonClick(object obj)
         {
             ClientData data = GenerateClientData();
-            if (data != null)
-            {
-                data.OperateType = OperateType.Compare;
-                _needSendData = true;
-            }
+            ButtonClickAction(data, OperateType.Compare);
         }
         public MainWindowViewModel()
         {
@@ -266,6 +251,71 @@ namespace TestClient
                 return false;
             }
             return true;
+        }
+        private bool DataCheck(ClientData data,out string errMessage)
+        {
+            errMessage = string.Empty;
+            bool isValid = true;
+            if (data.OperateType != OperateType.Compare)
+            {
+                if (data.DefaultTemplate == string.Empty)
+                {
+                    isValid = false;
+                    errMessage += "invalid DefaultTemplate\n";
+                }
+                if (data.TestDataType == TestDataType.Empty)
+                {
+                    isValid = false;
+                    errMessage += "invalid TestDataType\n";
+                }
+                if (SelectedItem.X64Path == string.Empty
+                    || !System.IO.Directory.Exists(SelectedItem.X64Path))
+                {
+                    isValid = false;
+                    errMessage += "invalid X64Path\n";
+                }
+                if (SelectedItem.X86Path == string.Empty
+                    || !System.IO.Directory.Exists(SelectedItem.X86Path))
+                {
+                    isValid = false;
+                    errMessage += "invalid X86Path\n";
+                }
+            }
+            else
+            {
+                if (data.TestVersion == string.Empty)
+                {
+                    isValid = false;
+                    errMessage += "invalid TestVersion\n";
+                }
+                if (data.StandardVersion == string.Empty)
+                {
+                    isValid = false;
+                    errMessage += "invalid StandardVersion\n";
+                }
+            }
+            return isValid;
+        }
+        private void ButtonClickAction(ClientData data, OperateType operateType)
+        {
+            if (data != null)
+            {
+                data.OperateType = operateType;
+                string errMessage = string.Empty;
+                if (DataCheck(data, out errMessage))
+                {
+                    if (UploadDll())
+                    {
+                        data.FtpCachePath = _ftpCachePath;
+                        _needSendData = true;
+                        _clientData = data;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show(errMessage);
+                }
+            }
         }
     }
 }

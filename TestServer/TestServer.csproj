@@ -59,9 +59,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="DLRTabItemViewModel.cs" />
     <Compile Include="MainWindowViewModel.cs" />
-    <Compile Include="TabItemViewModelBase.cs" />
+    <Compile Include="TabItemViewModel.cs" />
     <Compile Include="TestProcess.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

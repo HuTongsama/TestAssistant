@@ -8,7 +8,38 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Window.Resources>
-        <Style x:Key="TabItemStyle" TargetType="TabItem">
+
+        <ControlTemplate x:Key="ServerTabItemTemplate">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"></ColumnDefinition>
+                    <ColumnDefinition Width="6*"></ColumnDefinition>
+                    <ColumnDefinition Width="1*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
+                </Grid.RowDefinitions>
+                <Label Content="图集:" Grid.Row="0" Grid.Column="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"></Label>
+                <TextBox Text="{Binding PictureSetPath}" Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
+                <Button Content="..." Command="{Binding PicSetPathButtonClicked}" Grid.Row="0" Grid.Column="2"></Button>
+
+                <Label Content="模板:" Grid.Row="1" Grid.Column="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"></Label>
+                <TextBox Text="{Binding TemplatePath}" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
+                <Button Content="..." Command="{Binding TemplatePathButtonClicked}" Grid.Row="1" Grid.Column="2"></Button>
+
+                <Label Content="X86ProgramPath:" Grid.Row="2" Grid.Column="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                <TextBox Text="{Binding X86ProgramPath}" Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"/>
+                <Button Content="..." Command="{Binding X86ProgramButtonClicked}"  Grid.Row="2" Grid.Column="2"/>
+
+                <Label Content="X64ProgramPath:" Grid.Row="3" Grid.Column="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                <TextBox Text="{Binding X64ProgramPath}" Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"/>
+                <Button Content="..." Command="{Binding X64ProgramButtonClicked}" Grid.Row="3" Grid.Column="2"/>
+            </Grid>
+        </ControlTemplate>
+        <Style x:Key="TabItemStyle" TargetType="{x:Type TabItem}">
             <Style.Setters>
                 <Setter Property="Header" Value="{Binding Header}"></Setter>
             </Style.Setters>
@@ -16,77 +47,21 @@
                 <DataTrigger Binding="{Binding Header}" Value="DBR">
                     <Setter Property="Content">
                         <Setter.Value>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1*"></ColumnDefinition>
-                                    <ColumnDefinition Width="5*"></ColumnDefinition>
-                                    <ColumnDefinition Width="1*"></ColumnDefinition>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="1*"></RowDefinition>
-                                    <RowDefinition Height="1*"></RowDefinition>
-                                </Grid.RowDefinitions>
-                                <Label Content="图集:" Grid.Row="0" Grid.Column="0" VerticalContentAlignment="Center"></Label>
-                                <TextBox Text="{Binding PictureSetPath}" Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
-                                <Button Content="..." Command="{Binding PicSetPathButtonClicked}" Grid.Row="0" Grid.Column="2"></Button>
-
-                                <Label Content="模板:" Grid.Row="1" Grid.Column="0" VerticalContentAlignment="Center"></Label>
-                                <TextBox Text="{Binding TemplatePath}" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
-                                <Button Content="..." Command="{Binding TemplatePathButtonClicked}" Grid.Row="1" Grid.Column="2"></Button>
-                            </Grid>
+                            <ContentControl Template="{StaticResource ServerTabItemTemplate}"/>
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Header}" Value="DLR">
                     <Setter Property="Content">
                         <Setter.Value>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1*"></ColumnDefinition>
-                                    <ColumnDefinition Width="5*"></ColumnDefinition>
-                                    <ColumnDefinition Width="1*"></ColumnDefinition>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="1*"></RowDefinition>
-                                    <RowDefinition Height="1*"></RowDefinition>
-                                    <RowDefinition Height="1*"></RowDefinition>
-                                </Grid.RowDefinitions>
-                                <Label Content="图集:" Grid.Row="0" Grid.Column="0" VerticalContentAlignment="Center"></Label>
-                                <TextBox Text="{Binding PictureSetPath}" Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
-                                <Button Content="..." Command="{Binding PicSetPathButtonClicked}" Grid.Row="0" Grid.Column="2"></Button>
-
-                                <Label Content="模板:" Grid.Row="1" Grid.Column="0" VerticalContentAlignment="Center"></Label>
-                                <TextBox Text="{Binding TemplatePath}" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
-                                <Button Content="..." Grid.Row="1" Command="{Binding TemplatePathButtonClicked}" Grid.Column="2"></Button>
-
-                                <Label Content="模型:" Grid.Row="2" Grid.Column="0" VerticalContentAlignment="Center"></Label>
-                                <TextBox Text="{Binding ModelPath}" Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
-                                <Button Content="..." Command="{Binding ModelButtonClicked}" Grid.Row="2" Grid.Column="2"></Button>
-                            </Grid>
+                            <ContentControl Template="{StaticResource ServerTabItemTemplate}"/>
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Header}" Value="DCN">
                     <Setter Property="Content">
                         <Setter.Value>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="1*"></ColumnDefinition>
-                                    <ColumnDefinition Width="5*"></ColumnDefinition>
-                                    <ColumnDefinition Width="1*"></ColumnDefinition>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="1*"></RowDefinition>
-                                    <RowDefinition Height="1*"></RowDefinition>
-                                </Grid.RowDefinitions>
-                                <Label Content="图集:" Grid.Row="0" Grid.Column="0" VerticalContentAlignment="Center"></Label>
-                                <TextBox Text="{Binding PictureSetPath}" Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
-                                <Button Content="..." Command="{Binding PicSetPathButtonClicked}" Grid.Row="0" Grid.Column="2"></Button>
-
-                                <Label Content="模板:" Grid.Row="1" Grid.Column="0" VerticalContentAlignment="Center"></Label>
-                                <TextBox Text="{Binding TemplatePath}" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
-                                <Button Content="..." Command="{Binding TemplatePathButtonClicked}" Grid.Row="1" Grid.Column="2"></Button>
-                            </Grid>
+                            <ContentControl Template="{StaticResource ServerTabItemTemplate}"/>
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>

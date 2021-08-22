@@ -77,8 +77,8 @@
                             <DataTrigger Binding="{Binding IsSelected}" Value="true">
                                 <Setter Property="Background" TargetName="Bd" Value="{StaticResource Item.SelectedActive.Background}"/>
                                 <Setter Property="BorderBrush" TargetName="Bd" Value="{StaticResource Item.SelectedActive.Border}"/>
-                            </DataTrigger> 
-                           
+                            </DataTrigger>
+
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -150,10 +150,10 @@
 
                     <Label Content="x86DllPath" Margin="0,25,0,25" Grid.Row="2" Grid.Column="0"/>
                     <TextBox Text="{Binding X86Path}" Margin="0,25,0,25" Grid.Row="2" Grid.Column="1"/>
-                    <Button Content=".." Command="{Binding X86PathButtonCommand}" Margin="0,25,0,25" Grid.Row="2" Grid.Column="2"/>
+                    <Button Content=".." Command="{Binding X86PathButtonCommand ,UpdateSourceTrigger=PropertyChanged}" Margin="0,25,0,25" Grid.Row="2" Grid.Column="2"/>
 
                     <Label Content="x64DllPath" Margin="0,25,0,25" Grid.Row="3" Grid.Column="0"/>
-                    <TextBox Text="{Binding X64Path}" Margin="0,25,0,25" Grid.Row="3" Grid.Column="1"/>
+                    <TextBox Text="{Binding X64Path, UpdateSourceTrigger=PropertyChanged}" Margin="0,25,0,25" Grid.Row="3" Grid.Column="1"/>
                     <Button Content=".." Command="{Binding X64PathButtonCommand}" Margin="0,25,0,25" Grid.Row="3" Grid.Column="2"/>
 
                     <Label Content="额外后缀" Margin="0,25,0,25" Grid.Row="4" Grid.Column="0"/>

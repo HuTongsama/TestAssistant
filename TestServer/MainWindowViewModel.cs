@@ -21,14 +21,14 @@ namespace TestServer
         private Listener _listener;
         private TestProcess _testProcess;
         private bool _endCurrentTest = false;
-        private ObservableCollection<TabItemViewModelBase> _tabItems;
-        public ObservableCollection<TabItemViewModelBase> TabItems
+        private ObservableCollection<TabItemViewModel> _tabItems;
+        public ObservableCollection<TabItemViewModel> TabItems
         {
             get 
             {
                 if (_tabItems == null)
                 {
-                    _tabItems = new ObservableCollection<TabItemViewModelBase>();
+                    _tabItems = new ObservableCollection<TabItemViewModel>();
                 }
                 return _tabItems;
             }
@@ -61,17 +61,17 @@ namespace TestServer
 
             _testProcess = new TestProcess();
             _endCurrentTest = false;
-            _tabItems = new ObservableCollection<TabItemViewModelBase>();
+            _tabItems = new ObservableCollection<TabItemViewModel>();
             string productName = ProductType.DBR.ToString();
-            TabItemViewModelBase item = new TabItemViewModelBase(productName);
+            TabItemViewModel item = new TabItemViewModel(productName);
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
             productName = ProductType.DLR.ToString();
-            item = new DLRTabItemViewModel(productName);
+            item = new TabItemViewModel(productName);
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
             productName = ProductType.DCN.ToString();
-            item = new TabItemViewModelBase(productName);
+            item = new TabItemViewModel(productName);
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
           
@@ -248,7 +248,7 @@ namespace TestServer
         }
         private void TabItemPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            TabItemViewModelBase item = (TabItemViewModelBase)sender;
+            TabItemViewModel item = (TabItemViewModel)sender;
             if (item == null)
                 return;
             string key = item.Header;

@@ -14,7 +14,8 @@ namespace Data
     }
     public enum TestDataType
     {
-        File = 0,
+        Empty = 0,
+        File,
         Buffer,
         Memory
     }
@@ -27,7 +28,7 @@ namespace Data
     public class ClientData:IComparable<ClientData>
     {
         public OperateType OperateType { get; set; } = OperateType.Performance;
-        public TestDataType TestDataType { get; set; } = TestDataType.Buffer;
+        public TestDataType TestDataType { get; set; } = TestDataType.Empty;
         public ProductType ProductType { get; set; } = ProductType.DBR;
         public string DefaultTemplate { get; set; } = string.Empty;
         public string TestVersion { get; set; } = string.Empty;
@@ -35,6 +36,7 @@ namespace Data
         public string UserName { get; set; } = string.Empty;
         public DateTime UploadTime { get; set; } = new DateTime();
         public string VersionInfo { get; set; } = string.Empty;
+        public string FtpCachePath { get; set; } = string.Empty;
         public List<string> ImageCsvList { get; set; } = new List<string>();
         public Dictionary<string, List<string>> TemplateToCsvSet = new Dictionary<string, List<string>>();
 
@@ -42,5 +44,6 @@ namespace Data
         {
             return UploadTime.CompareTo(other.UploadTime);
         }
+        
     }
 }

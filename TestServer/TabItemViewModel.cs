@@ -7,7 +7,7 @@ using System.Windows.Input;
 using GUIBase;
 namespace TestServer
 {
-    public class TabItemViewModelBase : ViewModelBase
+    public class TabItemViewModel : ViewModelBase
     {
         string _pictureSetPath = string.Empty;
         public string PictureSetPath 
@@ -35,6 +35,32 @@ namespace TestServer
                 }
             }
         }
+        string _x86ProgramPath = string.Empty;
+        public string X86ProgramPath
+        {
+            get => _x86ProgramPath;
+            set
+            {
+                if (value != _x86ProgramPath)
+                {
+                    _x86ProgramPath = value;
+                    NotifyPropertyChanged("X86ProgramPath");
+                }
+            }
+        }
+        string _x64ProgramPath = string.Empty;
+        public string X64ProgramPath
+        {
+            get => _x64ProgramPath;
+            set
+            {
+                if (value != _x64ProgramPath)
+                {
+                    _x64ProgramPath = value;
+                    NotifyPropertyChanged("X64ProgramPath");
+                }
+            }
+        }
         private void OnPicSetPathButtonClicked(object obj)
         {
             string path = OnPathButtonClicked();
@@ -55,6 +81,7 @@ namespace TestServer
                 return _picSetPathButtonClicked;
             }
         }
+
         private void OnTemplatePathButtonClicked(object obj)
         {
             string path = OnPathButtonClicked();
@@ -75,6 +102,48 @@ namespace TestServer
                 return _templatePathButtonClicked;
             }
         }
+
+        private void OnX86ProgramPathButtonClicked(object obj)
+        {
+            string path = OnPathButtonClicked();
+            if (path != null)
+            {
+                X86ProgramPath = path;
+            }
+        }
+        RelayCommand _x86ProgramButtonClicked;
+        public ICommand X86ProgramButtonClicked
+        {
+            get
+            {
+                if (_x86ProgramButtonClicked == null)
+                {
+                    _x86ProgramButtonClicked = new RelayCommand(OnX86ProgramPathButtonClicked, delegate { return true; });
+                }
+                return _x86ProgramButtonClicked;
+            }
+        }
+
+        private void OnX64ProgramPathButtonClicked(object obj)
+        {
+            string path = OnPathButtonClicked();
+            if (path != null)
+            {
+                X64ProgramPath = path;
+            }
+        }
+        RelayCommand _x64ProgramButtonClicked;
+        public ICommand X64ProgramButtonClicked
+        {
+            get
+            {
+                if (_x64ProgramButtonClicked == null)
+                {
+                    _x64ProgramButtonClicked = new RelayCommand(OnX64ProgramPathButtonClicked, delegate { return true; });
+                }
+                return _x64ProgramButtonClicked;
+            }
+        }
         private string _header = string.Empty;
         public string Header
         {
@@ -89,13 +158,17 @@ namespace TestServer
             get => _header;
             
         }
-        public TabItemViewModelBase(string header = "",
+        public TabItemViewModel(string header = "",
             string pictureSetPath = "",
-            string templatePath = "")
+            string templatePath = "",
+            string x86ProgramPath = "",
+            string x64ProgramPath = "")
         {
             Header = header;
             PictureSetPath = pictureSetPath;
             TemplatePath = templatePath;
+            X86ProgramPath = x86ProgramPath;
+            X64ProgramPath = x64ProgramPath;
             
         }
     }
