@@ -49,20 +49,21 @@ namespace FTP
             }
         }
 
-        public void Download(string ftpPath, string localPath)
+        public bool Download(string ftpPath, string localPath)
         {
             DirectoryInfo dirInfo = new DirectoryInfo(localPath);
-            if (!dirInfo.Exists)
+            if (dirInfo.Exists)
             {
-                dirInfo.Create();
+                dirInfo.Delete(true);
             }
+            dirInfo.Create();
             if (MakeDirectory(ftpPath))
             {
                 string path = _ftpUrl + "/" + ftpPath;
                 FtpWebRequest request = (FtpWebRequest)WebRequest.Create(path);
                 request.Method = WebRequestMethods.Ftp.ListDirectory;
                 WebResponse response = request.GetResponse();
-                using (StreamReader reader = new StreamReader(response.GetResponseStream(),System.Text.Encoding.Default))
+                using (StreamReader reader = new StreamReader(response.GetResponseStream(), System.Text.Encoding.Default))
                 {
                     string line = reader.ReadLine();
                     while (line != null)
@@ -70,9 +71,9 @@ namespace FTP
                         string ftpFilePath = path + "/" + line;
                         request = (FtpWebRequest)WebRequest.Create(ftpFilePath);
                         request.Method = WebRequestMethods.Ftp.DownloadFile;
-                       
+
                         string localFilePath = localPath + "/" + line;
-                        using (FileStream fileStream = new FileStream(localFilePath,FileMode.OpenOrCreate))
+                        using (FileStream fileStream = new FileStream(localFilePath, FileMode.OpenOrCreate))
                         {
                             using (FtpWebResponse ftpResponse = (FtpWebResponse)request.GetResponse())
                             {
@@ -91,6 +92,11 @@ namespace FTP
                     }
                 }
             }
+            else
+            {
+                return false;
+            }
+            return true;
         }
         //can check if directory exist
         public bool MakeDirectory(string dir)

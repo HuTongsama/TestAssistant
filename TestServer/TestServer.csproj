@@ -108,6 +108,10 @@
       <Project>{69cdb35a-4ef5-458c-b8a8-0aff6065c7d3}</Project>
       <Name>Data</Name>
     </ProjectReference>
+    <ProjectReference Include="..\FTPHelper\FTP.csproj">
+      <Project>{57F4D204-470C-4DBA-880E-0BF5F3D28D4C}</Project>
+      <Name>FTP</Name>
+    </ProjectReference>
     <ProjectReference Include="..\GUIBase\GUIBase.csproj">
       <Project>{e598e935-6890-4935-9635-48d271135248}</Project>
       <Name>GUIBase</Name>

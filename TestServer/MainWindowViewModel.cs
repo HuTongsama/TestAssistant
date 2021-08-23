@@ -13,6 +13,8 @@ using Data;
 using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.IO;
+using FTP;
 
 namespace TestServer
 {
@@ -52,6 +54,109 @@ namespace TestServer
             }
         }
 
+        private string _resultPath = string.Empty;
+        public string ResultPath
+        {
+            get => _resultPath;
+            set
+            {
+                if (value != _resultPath)
+                {
+                    _resultPath = value;
+                    NotifyPropertyChanged("ResultPath");
+                }
+            }
+        }
+        private string _conclusionPath = string.Empty;
+        public string ConclusionPath
+        {
+            get => _conclusionPath;
+            set
+            {
+                if (value != _conclusionPath)
+                {
+                    _conclusionPath = value;
+                    NotifyPropertyChanged("ConclusionPath");
+                }
+            }
+        }
+        private string _dllPath = string.Empty;
+        public string DllPath
+        {
+            get => _dllPath;
+            set
+            {
+                if (value != _dllPath)
+                {
+                    _dllPath = value;
+                    NotifyPropertyChanged("DLLPath");
+                }
+            }
+        }
+
+        private string _currentLocalPath = string.Empty;
+        private void OnResultPathButtonClick(object obj)
+        {
+            string path = OnPathButtonClicked();
+            if (path != null)
+            {
+                ResultPath = path;
+            }
+        }
+        private RelayCommand _resultPathButtonCommand;
+        public ICommand ResultPathButtonCommand
+        {
+            get
+            {
+                if (_resultPathButtonCommand == null)
+                {
+                    _resultPathButtonCommand = new RelayCommand(OnResultPathButtonClick, delegate { return true; });
+                }
+                return _resultPathButtonCommand;
+            }
+        }
+
+        private void OnConclusionPathButtonClick(object obj)
+        {
+            string path = OnPathButtonClicked();
+            if (path != null)
+            {
+                ConclusionPath = path;
+            }
+        }
+        private RelayCommand _conclusionPathButtonCommand;
+        public ICommand ConclusionPathButtonCommand
+        {
+            get
+            {
+                if (_conclusionPathButtonCommand == null)
+                {
+                    _conclusionPathButtonCommand = new RelayCommand(OnConclusionPathButtonClick, delegate { return true; });
+                }
+                return _conclusionPathButtonCommand;
+            }
+        }
+
+        private void OnDllPathButtonClick(object obj)
+        {
+            string path = OnPathButtonClicked();
+            if (path != null)
+            {
+                DllPath = path;
+            }
+        }
+        private RelayCommand _dllPathButtonCommand;
+        public ICommand DllPathButtonCommand
+        {
+            get 
+            {
+                if (_dllPathButtonCommand == null)
+                {
+                    _dllPathButtonCommand = new RelayCommand(OnDllPathButtonClick, delegate { return true; });
+                }
+                return _dllPathButtonCommand;
+            }
+        }
         public MainWindowViewModel()
         {
             _listener = new Listener();
@@ -119,24 +224,7 @@ namespace TestServer
             }
         }
         private void StartTest()
-        {
-            //Process myProcess = Process.Start("Test.exe");
-            //while (true)
-            //{
-            //    if (myProcess.HasExited)
-            //    {
-            //        MessageBox.Show(string.Format("succeed to exit {0}",myProcess.ExitCode));
-            //        break;
-            //    }
-            //    if (_endCurrentTest)
-            //    {
-            //        myProcess.Kill();
-            //        myProcess.WaitForExit();
-            //        MessageBox.Show(string.Format("end current Test"));
-            //        break;
-            //    }
-                
-            //}
+        {          
             while (true)
             {
                 if (TestWaitList.Count > 0)
@@ -152,67 +240,96 @@ namespace TestServer
                     }
                     if (data != null)
                     {
-                        string logInfo = ConsoleMessage + "\nStart test " + data.VersionInfo + "\n";
-                        ConsoleMessage = logInfo;
-                        while (true)
+                        if (DownLoadDllFromFtp(data))
                         {
-                            if (_endCurrentTest)
+                            CopyContentToLocalPath(data);
+                            AlgorithmTestJson algorithmTestJson = TransClientToJson(data);                           
+                            string jsonString = JsonSerializer.Serialize(algorithmTestJson);
+                            System.IO.File.WriteAllText(DllPath + "/" + "config.json", jsonString);
+                            if (algorithmTestJson != null)
                             {
-                                //kill process
-                                break;
-                            }
-                        }
-                        if (!_endCurrentTest)
-                        {
-                            if (data.StandardVersion != string.Empty)
-                            {
-                                data.OperateType = OperateType.Compare;
-                                lock (_compareWaitListLock)
+                                LogMessage("Start test " + data.VersionInfo);
+                                if (!CallTest(data))
                                 {
-                                    CompareWaitList.Add(data);
+                                    LogMessage("CallTest failed " + data.VersionInfo);
+                                    if (_endCurrentTest)
+                                    {
+                                        _endCurrentTest = false;
+                                    }
+                                    //todo: clear current test file
+                                    continue;
                                 }
+                                if (data.StandardVersion != string.Empty)
+                                {
+                                    data.OperateType = OperateType.Compare;
+                                    lock (_compareWaitListLock)
+                                    {
+                                        CompareWaitList.Add(data);
+                                    }
+                                }
+                                LogMessage("Test " + data.VersionInfo + " finished");
+                                //CallCompare();
+                                //CallGetPicture();
+                                
+                            }
+                            else
+                            {
+                                MessageBox.Show("error algorithm json");
                             }
                         }
                         else
                         {
-                            _endCurrentTest = false;
+                            LogMessage("DownLoadDllFromFtp fail " + data.VersionInfo);
                         }
-                        logInfo = ConsoleMessage + "\nTest " + data.VersionInfo + " finished" + "\n";
-                        ConsoleMessage = logInfo;
-                        CallCompare();
-                        CallGetPicture();
                     }
                 }
             }
-            //while (true)
-            //{
-            //    var testList = _listener.ItemList;
-            //    //todo: update ui
-            //    foreach (var item in testList)
-            //    {
-            //        _endCurrentTest = false;
-            //        //todo: download dll from ftp
-            //        Process curProcess = Process.Start("Test.exe");
-            //        if (curProcess == null)
-            //            continue;
-            //        int exitCode = WaitProcess(curProcess);
-            //        if (exitCode == 0)
-            //        {
-            //            curProcess = Process.Start("Conclustion.exe");
-            //            if (curProcess == null)
-            //                continue;
-            //            exitCode = WaitProcess(curProcess);
-            //        }
-            //        if (exitCode == 0)
-            //        {
-            //            curProcess = Process.Start("GetPicture.exe");
-            //            if (curProcess == null)
-            //                continue;
-            //            exitCode = WaitProcess(curProcess);
-            //        }
-            //        //todo: _listener send message
-            //    }
-            //}
+           
+        }
+        private bool CallTest(ClientData data)
+        {
+            string args = string.Empty;
+            switch (data.OperateType)
+            {
+                case OperateType.Performance:
+                    args += "-p ";
+                    break;
+                case OperateType.Stability:
+                    args += "-s ";
+                    break;
+                case OperateType.Compare:
+                default:
+                    return false;
+            }
+            args += data.TestVersion + "_" + DateTime.Now.ToString("HHmmss");            
+            ProcessStartInfo processStartInfo = new ProcessStartInfo();
+            processStartInfo.UseShellExecute = false;
+            processStartInfo.WorkingDirectory = _currentLocalPath;
+            processStartInfo.Arguments = args;
+            switch (data.ProductType)
+            {
+                case ProductType.DBR:
+                    processStartInfo.FileName = _currentLocalPath + "/" + "DBRAutoTest.exe";
+                    break;
+                case ProductType.DLR:
+                    processStartInfo.FileName = _currentLocalPath + "/" + "DLRAutoTest.exe";
+                    break;
+                case ProductType.DCN:
+                    processStartInfo.FileName = _currentLocalPath + "/" + "DCNAutoTest.exe";
+                    break;
+                default:
+                    return false;
+            }
+            Process testProcess = Process.Start(processStartInfo);
+            if (testProcess == null)
+            {
+                return false;
+            }
+            int exitCode = WaitProcess(testProcess);
+            if (exitCode == 0)
+                return true;
+            else
+                return false;
         }
         private void CallCompare()
         {
@@ -286,9 +403,16 @@ namespace TestServer
                 case "DBR":
                     {
                         if (!serverData.KeyToPictureSet.ContainsKey("1D"))
-                            serverData.KeyToPictureSet.Add("1D", new List<string>() { "1.csv", "2.csv" });
-                        if (!serverData.KeyToPictureSet.ContainsKey("2D"))
-                            serverData.KeyToPictureSet.Add("2D", new List<string>() { "3.csv", "4.csv" });
+                            serverData.KeyToPictureSet.Add("1D", new List<string>()
+                            {   "Gen1D.csv",
+                                "ScanDoc.OneD_Check.csv",
+                                "zxing.oned_Check.csv",
+                                "isthmusinc_Check.csv",
+                                "N95-2592x1944_Check.csv",
+                                "NonScanDoc.OneD_Check.csv",
+                                "downPic_code128.csv",
+                                "1DFrame.csv"
+                            });                      
                         if (Enumerable.Count(serverData.DecodeTypeList,(decodeType)=> decodeType == TestDataType.File.ToString()) == 0)
                         {
                             serverData.DecodeTypeList.Add(TestDataType.File.ToString());
@@ -347,9 +471,47 @@ namespace TestServer
                 }
             }
         }
-        private AutoTestJson TransClientToJson(ClientData data)
+        private void LogMessage(string message)
         {
-            AutoTestJson autoTestJson = null;
+            string logInfo = ConsoleMessage + "\n" + message + "\n";
+            ConsoleMessage = logInfo;
+        }
+        private bool DownLoadDllFromFtp(ClientData data)
+        {
+            _currentLocalPath = DllPath + "/" + data.VersionInfo;       
+            FTPHelper ftpHelper = new FTPHelper();
+            if (ftpHelper.Download(data.FtpCachePath, _currentLocalPath))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        private void CopyContentToLocalPath(ClientData data)
+        {
+            string contentPath = string.Empty;
+            foreach (var tabItem in TabItems)
+            {
+                if (tabItem.Header == data.ProductType.ToString())
+                {
+                    contentPath = tabItem.X64ProgramPath;
+                    break;
+                }
+            }
+            if (contentPath == string.Empty)
+                return;
+            DirectoryInfo dirInfo = new DirectoryInfo(contentPath);
+            FileInfo[] fileList = dirInfo.GetFiles("*.*");
+            foreach (var file in fileList)
+            {
+                File.Copy(file.FullName, Path.Combine(_currentLocalPath, file.Name));
+            }
+        }
+        private AlgorithmTestJson TransClientToJson(ClientData data)
+        {
+            AlgorithmTestJson algorithmTestJson = null;
             ProductType productType = data.ProductType;
             OperateType operateType = data.OperateType;
             TabItemViewModel productTab = null;
@@ -363,20 +525,28 @@ namespace TestServer
             }
             if (productTab == null)
             {
-                return autoTestJson;
+                return algorithmTestJson;
             }
-            autoTestJson = new AutoTestJson();
+            algorithmTestJson = new AlgorithmTestJson();
             if (operateType == OperateType.Performance)
-                autoTestJson.FilePath = productTab.PictureSetPath;
+                algorithmTestJson.FilePath = productTab.PictureSetPath;
             else if (operateType == OperateType.Stability)
-                autoTestJson.FilePath = "";
-            autoTestJson.TemplatePath = productTab.TemplatePath;
+                algorithmTestJson.FilePath = "";
+            algorithmTestJson.TemplatePath = productTab.TemplatePath;
+            algorithmTestJson.DecodeType = data.TestDataType.ToString();
             string templateName = string.Empty;
             if (productType == ProductType.DBR)
                 templateName = "Test1";
             else if (productType == ProductType.DLR)
                 templateName = "locr";
-            return autoTestJson;
+            algorithmTestJson.DefaultTemplate = new KeyValuePair<string, string>(templateName, data.DefaultTemplate);
+            foreach (var templateToCsv in data.TemplateToCsvSet)
+            {
+                algorithmTestJson.Template.Add(new KeyValuePair<string, KeyValuePair<string, List<string>>>
+                    (templateToCsv.Key, new KeyValuePair<string, List<string>>
+                    (templateName, templateToCsv.Value)));
+            }
+            return algorithmTestJson;
         }
     }
 }

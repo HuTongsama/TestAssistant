@@ -13,6 +13,7 @@ using System.Windows.Input;
 using System.IO;
 using FTP;
 using System.Windows;
+using System.Configuration;
 
 namespace TestClient
 {
@@ -73,7 +74,7 @@ namespace TestClient
         public MainWindowViewModel()
         {
             string productName = ProductType.DBR.ToString();
-            TabItemViewModel item = new TabItemViewModel(productName);
+            TabItemViewModel item = new TabItemViewModel(productName);         
             _tabItems.Add(productName, item);
             SelectedItem = item;
             

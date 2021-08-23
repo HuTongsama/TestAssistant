@@ -69,8 +69,8 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <Button x:Name="StartButton" Command="{Binding StartButtonCommand}" Content="StartButton" HorizontalAlignment="Left" Margin="506,365,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="4.027,-0.474"/>
-        <Button x:Name="EndButton" Command="{Binding EndButtonCommand}" Content="EndButton" HorizontalAlignment="Left" Margin="639,365,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="1.093,5.842"/>
+        <Button x:Name="StartButton" Command="{Binding StartButtonCommand}" Content="StartButton" HorizontalAlignment="Left" Margin="506,390,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="4.027,-0.474"/>
+        <Button x:Name="EndButton" Command="{Binding EndButtonCommand}" Content="EndButton" HorizontalAlignment="Left" Margin="638,390,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="1.093,5.842"/>
         <TabControl ItemsSource="{Binding TabItems}" ItemContainerStyle="{StaticResource TabItemStyle}" SelectedIndex="0" HorizontalAlignment="Left" Height="172" Margin="10,10,0,0" VerticalAlignment="Top" Width="446"></TabControl>
         <Grid HorizontalAlignment="Left" Height="199" Margin="10,199,0,0" VerticalAlignment="Top" Width="446">
             <Grid.ColumnDefinitions>
@@ -102,9 +102,32 @@
             </ListBox>
         </Grid>
 
-        <Label Content="Message" HorizontalAlignment="Left" Margin="506,9,0,0" VerticalAlignment="Top" Width="133"/>
-        <ScrollViewer gui:AutoScrollBehavior.AutoScroll="True" HorizontalAlignment="Left" Height="304" Margin="506,39,0,0" VerticalAlignment="Top" Width="262">
+        <Label Content="Message" HorizontalAlignment="Left" Margin="506,199,0,0" VerticalAlignment="Top" Width="133" Height="29"/>
+        <ScrollViewer gui:AutoScrollBehavior.AutoScroll="True" HorizontalAlignment="Left" Height="137" Margin="506,233,0,0" VerticalAlignment="Top" Width="262">
             <TextBlock TextWrapping="Wrap" Text="{Binding ConsoleMessage}"/>
         </ScrollViewer>
+        <Grid HorizontalAlignment="Left" Height="172" Margin="506,10,0,0" VerticalAlignment="Top" Width="262">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <Label Grid.Row="0" Grid.Column="0" Content="dllPath:" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DllPath}" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Button Grid.Row="0" Grid.Column="2" Command="{Binding DllPathButtonCommand}" Content="..." Margin="0,15,0,15"/>
+
+            <Label Grid.Row="1" Grid.Column="0" Content="resultPath:" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ResultPath}" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Button Grid.Row="1" Grid.Column="2" Command="{Binding ResultPathButtonCommand}" Content="..." Margin="0,15,0,15"/>
+
+            <Label Grid.Row="2" Grid.Column="0" Content="conclusionPath:" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ConclusionPath}" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Button Grid.Row="2" Grid.Column="2" Command="{Binding ConclusionPathButtonCommand}" Content="..." Margin="0,15,0,15"/>
+        </Grid>
     </Grid>
 </Window>

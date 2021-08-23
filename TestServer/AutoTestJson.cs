@@ -8,6 +8,11 @@ namespace TestServer
 {
     class AutoTestJson
     {
+        
+    }
+
+    class AlgorithmTestJson
+    {
         public string FilePath { get; set; } = string.Empty;
         public string TemplatePath { get; set; } = string.Empty;
         public string DecodeType { get; set; } = string.Empty;

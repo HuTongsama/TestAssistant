@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -56,7 +57,7 @@ namespace TestClient
             {
                 if (value != _header)
                 {
-                    _header = value;
+                    _header = value;                    
                     NotifyPropertyChanged("Header");
                 }
             }
