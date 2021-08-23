@@ -15,6 +15,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.IO;
 using FTP;
+using System.Configuration;
 
 namespace TestServer
 {
@@ -63,6 +64,7 @@ namespace TestServer
                 if (value != _resultPath)
                 {
                     _resultPath = value;
+                    SetConfigValue("resultPath", value);
                     NotifyPropertyChanged("ResultPath");
                 }
             }
@@ -76,6 +78,7 @@ namespace TestServer
                 if (value != _conclusionPath)
                 {
                     _conclusionPath = value;
+                    SetConfigValue("conclusionPath", value);
                     NotifyPropertyChanged("ConclusionPath");
                 }
             }
@@ -89,6 +92,7 @@ namespace TestServer
                 if (value != _dllPath)
                 {
                     _dllPath = value;
+                    SetConfigValue("dllPath", value);
                     NotifyPropertyChanged("DLLPath");
                 }
             }
@@ -167,19 +171,39 @@ namespace TestServer
             _testProcess = new TestProcess();
             _endCurrentTest = false;
             _tabItems = new ObservableCollection<TabItemViewModel>();
+
+            Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+           
             string productName = ProductType.DBR.ToString();
-            TabItemViewModel item = new TabItemViewModel(productName);
+            TabItemViewModel item = new TabItemViewModel(productName,
+                config.AppSettings.Settings["dbrPicturePath"].Value,
+                config.AppSettings.Settings["dbrTemplatePath"].Value,
+                config.AppSettings.Settings["dbrX86ProgramPath"].Value,
+                config.AppSettings.Settings["dbrX64ProgramPath"].Value);                    
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
             productName = ProductType.DLR.ToString();
-            item = new TabItemViewModel(productName);
+            item = new TabItemViewModel(productName,
+                config.AppSettings.Settings["dlrPicturePath"].Value,
+                config.AppSettings.Settings["dlrTemplatePath"].Value,
+                config.AppSettings.Settings["dlrX86ProgramPath"].Value,
+                config.AppSettings.Settings["dlrX64ProgramPath"].Value);
+            
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
             productName = ProductType.DCN.ToString();
-            item = new TabItemViewModel(productName);
+            item = new TabItemViewModel(productName,
+                config.AppSettings.Settings["dcnPicturePath"].Value,
+                config.AppSettings.Settings["dcnTemplatePath"].Value,
+                config.AppSettings.Settings["dcnX86ProgramPath"].Value,
+                config.AppSettings.Settings["dcnX64ProgramPath"].Value);
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
-          
+
+            ResultPath = config.AppSettings.Settings["resultPath"].Value;
+            ConclusionPath = config.AppSettings.Settings["conclusionPath"].Value;
+            DllPath = config.AppSettings.Settings["dllPath"].Value;
+
         }
         private void OnStartButtonClicked(object obj)
         {          

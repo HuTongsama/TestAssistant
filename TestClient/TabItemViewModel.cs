@@ -144,6 +144,10 @@ namespace TestClient
                 if (value != _x64Path)
                 {
                     _x64Path = value;
+                    Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                    config.AppSettings.Settings["test"].Value = value;
+                    config.Save();
+                    
                     NotifyPropertyChanged("X64Path");
                 }
             }

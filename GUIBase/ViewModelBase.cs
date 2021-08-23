@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,13 @@ namespace GUIBase
                 path = folderBrowserDialog.SelectedPath;
             }
             return path;
+        }
+
+        protected void SetConfigValue(string configKey, string value)
+        {
+            Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            config.AppSettings.Settings[configKey].Value = value;
+            config.Save();
         }
     }
 }

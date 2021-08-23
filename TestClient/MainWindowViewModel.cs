@@ -74,7 +74,9 @@ namespace TestClient
         public MainWindowViewModel()
         {
             string productName = ProductType.DBR.ToString();
-            TabItemViewModel item = new TabItemViewModel(productName);         
+            TabItemViewModel item = new TabItemViewModel(productName);
+            Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+            item.X64Path = config.AppSettings.Settings["test"].Value;
             _tabItems.Add(productName, item);
             SelectedItem = item;
             
