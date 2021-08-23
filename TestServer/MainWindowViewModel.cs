@@ -182,6 +182,9 @@ namespace TestServer
                 config.AppSettings.Settings["dbrX64ProgramPath"].Value);                    
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
+
+
+
             productName = ProductType.DLR.ToString();
             item = new TabItemViewModel(productName,
                 config.AppSettings.Settings["dlrPicturePath"].Value,
@@ -199,10 +202,11 @@ namespace TestServer
                 config.AppSettings.Settings["dcnX64ProgramPath"].Value);
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
-
+       
             ResultPath = config.AppSettings.Settings["resultPath"].Value;
             ConclusionPath = config.AppSettings.Settings["conclusionPath"].Value;
             DllPath = config.AppSettings.Settings["dllPath"].Value;
+            GenerateServerData();
 
         }
         private void OnStartButtonClicked(object obj)
@@ -245,6 +249,61 @@ namespace TestServer
                     _endButtonCommand = new RelayCommand(OnEndButtonClicked, delegate { return true; });
                 }
                 return _endButtonCommand;
+            }
+        }
+
+        private void GenerateServerData()
+        {
+            foreach (var tabItem in TabItems)
+            {
+                string key = tabItem.Header;
+                ServerData serverData = new ServerData();
+                serverData.DataType = "ServerData";
+                _keyToData.Add(key, serverData);
+
+                switch (key)
+                {
+                    case "DBR":
+                        {
+                            if (!serverData.KeyToPictureSet.ContainsKey("1D"))
+                                serverData.KeyToPictureSet.Add("1D", new List<string>()
+                            {   "Gen1D.csv",
+                                "ScanDoc.OneD_Check.csv",
+                                "zxing.oned_Check.csv",
+                                "isthmusinc_Check.csv",
+                                "N95-2592x1944_Check.csv",
+                                "NonScanDoc.OneD_Check.csv",
+                                "downPic_code128.csv",
+                                "1DFrame.csv"
+                            });
+                            if (Enumerable.Count(serverData.DecodeTypeList, (decodeType) => decodeType == TestDataType.File.ToString()) == 0)
+                            {
+                                serverData.DecodeTypeList.Add(TestDataType.File.ToString());
+                            }
+                            if (Enumerable.Count(serverData.DecodeTypeList, (decodeType) => decodeType == TestDataType.Buffer.ToString()) == 0)
+                            {
+                                serverData.DecodeTypeList.Add(TestDataType.Buffer.ToString());
+                            }
+
+                        }
+                        break;
+                    case "DLR":
+                        break;
+                    case "DCN":
+                        break;
+                    default:
+                        break;
+                }
+                if (tabItem.PictureSetPath != string.Empty)
+                {
+                    List<string> fileNames = CommonFuction.GetAllFiles(tabItem.PictureSetPath, "*.csv");
+                    serverData.PictureSetList = fileNames;
+                }
+                if (tabItem.TemplatePath != string.Empty)
+                {
+                    List<string> fileNames = CommonFuction.GetAllFiles(tabItem.TemplatePath, "*.json");
+                    serverData.TemplateList = fileNames;
+                }
             }
         }
         private void StartTest()
@@ -421,40 +480,7 @@ namespace TestServer
                 default:
                     break;
             }
-
-            switch (key)
-            {
-                case "DBR":
-                    {
-                        if (!serverData.KeyToPictureSet.ContainsKey("1D"))
-                            serverData.KeyToPictureSet.Add("1D", new List<string>()
-                            {   "Gen1D.csv",
-                                "ScanDoc.OneD_Check.csv",
-                                "zxing.oned_Check.csv",
-                                "isthmusinc_Check.csv",
-                                "N95-2592x1944_Check.csv",
-                                "NonScanDoc.OneD_Check.csv",
-                                "downPic_code128.csv",
-                                "1DFrame.csv"
-                            });                      
-                        if (Enumerable.Count(serverData.DecodeTypeList,(decodeType)=> decodeType == TestDataType.File.ToString()) == 0)
-                        {
-                            serverData.DecodeTypeList.Add(TestDataType.File.ToString());
-                        }
-                        if (Enumerable.Count(serverData.DecodeTypeList, (decodeType) => decodeType == TestDataType.Buffer.ToString()) == 0)
-                        {
-                            serverData.DecodeTypeList.Add(TestDataType.Buffer.ToString());
-                        }
-                            
-                    }
-                    break;
-                case "DLR":
-                    break;
-                case "DCN":
-                    break;
-                default:
-                    break;
-            }
+      
             string message = GenerateMessage();
             byte[] data = System.Text.Encoding.ASCII.GetBytes(message);
             _listener.SendToAllClients(data);
