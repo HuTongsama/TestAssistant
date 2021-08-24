@@ -133,9 +133,9 @@ namespace TestClient
                                 config.AppSettings.Settings.Add(configKey, "");
                                 config.Save();
                             }
-                            checkState.State = stateValue;
-                            checkState.SaveConfig = delegate (string configVal) { SetConfigValue(configKey, configVal); };
                             checkState.PropertyChanged += this.CheckStatePropertyChanged;
+                            checkState.State = stateValue;
+                            checkState.SaveConfig = delegate (string configVal) { SetConfigValue(configKey, configVal); };                          
                             _keyToCheckState.Add(checkState);
                         });
 
