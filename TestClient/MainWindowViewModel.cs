@@ -73,27 +73,43 @@ namespace TestClient
         }
         public MainWindowViewModel()
         {
-            string productName = ProductType.DBR.ToString();
-            TabItemViewModel item = new TabItemViewModel(productName);
             Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-            item.X64Path = config.AppSettings.Settings["test"].Value;
-            _tabItems.Add(productName, item);
+            string selectedProduct = config.AppSettings.Settings["selectedProduct"].Value;
+
+            string productName = ProductType.DBR.ToString();
+            TabItemViewModel item = new TabItemViewModel(
+                productName,
+                config.AppSettings.Settings["dbrX86DllPath"].Value,
+                config.AppSettings.Settings["dbrX64DllPath"].Value);        
+            _tabItems.Add(productName, item);       
             SelectedItem = item;
             
             productName = ProductType.DLR.ToString();
-            item = new TabItemViewModel(productName);
+            item = new TabItemViewModel(
+                productName,
+                config.AppSettings.Settings["dlrX86DllPath"].Value,
+                config.AppSettings.Settings["dlrX64DllPath"].Value);
+            if (selectedProduct != string.Empty && selectedProduct == productName)
+                SelectedItem = item;
             _tabItems.Add(productName, item);
 
             productName = ProductType.DCN.ToString();
-            item = new TabItemViewModel(productName);
+            item = new TabItemViewModel(
+                productName,
+                config.AppSettings.Settings["dcnX86DllPath"].Value,
+                config.AppSettings.Settings["dcnX64DllPath"].Value);
+            if (selectedProduct != string.Empty && selectedProduct == productName)
+                SelectedItem = item;
             _tabItems.Add(productName, item);
+
             Thread clientThread = new Thread(ClientThreadFunc);
             clientThread.IsBackground = true;
             clientThread.Start();
 
         }
 
-        private void UpdateTabCollection(List<string> srcList, ObservableCollection<ListItem> listItems, SameListItem sameListItem)
+        private void UpdateTabCollection(List<string> srcList, ObservableCollection<ListItem> listItems,
+            SameListItem sameListItem,Action<string> saveConfig = null)
         {
             App.Current.Dispatcher.Invoke((Action)delegate
             {
@@ -102,6 +118,8 @@ namespace TestClient
                     ListItem item = new ListItem(picSet);
                     if (Enumerable.Contains(listItems, item, sameListItem))
                         continue;
+                    if (saveConfig != null)
+                        item.SaveConfig = saveConfig;
                     listItems.Add(item);
                 }
             });
@@ -136,8 +154,12 @@ namespace TestClient
                                 SameListItem sameListItem = new SameListItem();
                                
                                 UpdateTabCollection(serverData.PictureSetList, curTab.PictureSetList, sameListItem);
-                                UpdateTabCollection(serverData.TemplateList, curTab.TemplateSetList, sameListItem);
-                                UpdateTabCollection(serverData.DecodeTypeList, curTab.DecodeTypeList, sameListItem);
+                                UpdateTabCollection(serverData.TemplateList, curTab.TemplateSetList,
+                                    sameListItem,
+                                    delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DefaultTemplate"), configValue); });
+                                UpdateTabCollection(serverData.DecodeTypeList, curTab.DecodeTypeList,
+                                    sameListItem,
+                                    delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DecodeType"), configValue); });
                                
                                 Dictionary<string, List<ListItem>> tmpKeyToPicSet = new Dictionary<string, List<ListItem>>();
                                 foreach (var keyPair in serverData.KeyToPictureSet)

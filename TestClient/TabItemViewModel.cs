@@ -64,9 +64,35 @@ namespace TestClient
         }
        
         public ObservableCollection<ListItem> TemplateSetList { get; set; } = new ObservableCollection<ListItem>();
+        private ListItem _selectedDefaultTemplate = new ListItem();
+        public ListItem SelectedDefaultTemplate
+        {
+            get => _selectedDefaultTemplate;
+            set 
+            {
+                if (value != _selectedDefaultTemplate)
+                {
+                    _selectedDefaultTemplate = value;
+                    NotifyPropertyChanged("SelectedDefaultTemplate");
+                }
+            }
+        }
         public ObservableCollection<ListItem> PictureSetList { get; set; } = new ObservableCollection<ListItem>();
         public ObservableCollection<ListItem> SelectedPicList { get; set; } = new ObservableCollection<ListItem>();
         public ObservableCollection<ListItem> DecodeTypeList { get; set; } = new ObservableCollection<ListItem>();
+        private ListItem _selectedDecodeType = new ListItem();
+        public ListItem SelectedDecodeType
+        {
+            get => _selectedDecodeType;
+            set
+            {
+                if (value != _selectedDecodeType)
+                {
+                    _selectedDecodeType = value;
+                    NotifyPropertyChanged("SelectedDecodeType");
+                }
+            }
+        }
         public ObservableCollection<ListItem> TestVersionList { get; set; } = new ObservableCollection<ListItem>();
         public ListItem SelectedTestVersion { get; set; } = new ListItem();
         public ObservableCollection<ListItem> StandardVersionList { get; set; } = new ObservableCollection<ListItem>();
@@ -128,6 +154,7 @@ namespace TestClient
                 if (value != _x86Path)
                 {
                     _x86Path = value;
+                    SetConfigValue(GetConfigKey(Header, "X86DllPath"), value);
                     NotifyPropertyChanged("X86Path");
                 }
             }
@@ -144,10 +171,7 @@ namespace TestClient
                 if (value != _x64Path)
                 {
                     _x64Path = value;
-                    Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-                    config.AppSettings.Settings["test"].Value = value;
-                    config.Save();
-                    
+                    SetConfigValue(GetConfigKey(Header, "X64DllPath"), value);
                     NotifyPropertyChanged("X64Path");
                 }
             }
@@ -235,22 +259,27 @@ namespace TestClient
                 return _removeStandardCommand;
             }
         }
-        public TabItemViewModel(string header)
+        public TabItemViewModel(string header,string x86Path = "",string x64Path = "")
         {
             Header = header;
             PictureSetList.CollectionChanged += PictureSetListChanged;
             SelectedPicList.CollectionChanged += SelectedSetListChanged;
-            ListItem item = new ListItem("123");
-            item.UseCustomerLeftClick = true;
+            TemplateSetList.CollectionChanged += TemplateSetListChanged;
+            DecodeTypeList.CollectionChanged += DecodeTypeListChanged;
             
-            TestVersionList.Add(item);
-            item = new ListItem("234");
-            item.UseCustomerLeftClick = true;
+            X86Path = x86Path;
+            X64Path = x64Path;
+            //ListItem item = new ListItem("123");
+            //item.UseCustomerLeftClick = true;
             
-            TestVersionList.Add(item);
-            item = new ListItem("789");
-            item.UseCustomerLeftClick = true;
-            StandardVersionList.Add(item);
+            //TestVersionList.Add(item);
+            //item = new ListItem("234");
+            //item.UseCustomerLeftClick = true;
+            
+            //TestVersionList.Add(item);
+            //item = new ListItem("789");
+            //item.UseCustomerLeftClick = true;
+            //StandardVersionList.Add(item);
         }
 
         private void UpdateSelectedPicList(ListItem item, bool isAdd, EqualityComparer<ListItem> comparer)
@@ -344,6 +373,39 @@ namespace TestClient
                             picListItem.IsSelected = false;
                             break;
                         }
+                    }
+                }
+            }
+        }
+        private void TemplateSetListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            ListItem selectedItem = null;
+            ReadConfig(GetConfigKey(Header, "DefaultTemplate"), e, out selectedItem);
+            if (selectedItem != null)
+                SelectedDefaultTemplate = selectedItem;
+        }
+        private void DecodeTypeListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            ListItem selectedItem = null;
+            ReadConfig(GetConfigKey(Header, "DecodeType"), e,out selectedItem);
+            if (selectedItem != null)
+                SelectedDecodeType = selectedItem;
+        }
+        private void ReadConfig(string configKey, NotifyCollectionChangedEventArgs e,out ListItem selectedItem)
+        {
+            selectedItem = null;
+            if (e.NewItems != null && e.NewItems.Count > 0)
+            {
+                Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                string preSelected = config.AppSettings.Settings[configKey].Value;
+                foreach (var item in e.NewItems)
+                {
+                    ListItem listItem = item as ListItem;
+                    if (listItem.ItemName == preSelected)
+                    {
+                        selectedItem = listItem;
+                        listItem.IsSelected = true;
+                        break;
                     }
                 }
             }

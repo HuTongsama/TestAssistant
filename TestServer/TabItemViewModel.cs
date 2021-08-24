@@ -18,7 +18,7 @@ namespace TestServer
                 if(value != _pictureSetPath)
                 {
                     _pictureSetPath = value;
-                    SetConfigValue(GetConfigKey("PicturePath"), value);
+                    SetConfigValue(GetConfigKey(Header,"PicturePath"), value);
                     NotifyPropertyChanged("PictureSetPath");
                 }
             }
@@ -32,7 +32,7 @@ namespace TestServer
                 if (value != _templatePath)
                 {
                     _templatePath = value;
-                    SetConfigValue(GetConfigKey("TemplatePath"), value);
+                    SetConfigValue(GetConfigKey(Header,"TemplatePath"), value);
                     NotifyPropertyChanged("TemplatePath");
                 }
             }
@@ -46,7 +46,7 @@ namespace TestServer
                 if (value != _x86ProgramPath)
                 {
                     _x86ProgramPath = value;
-                    SetConfigValue(GetConfigKey("X86ProgramPath"), value);
+                    SetConfigValue(GetConfigKey(Header,"X86ProgramPath"), value);
                     NotifyPropertyChanged("X86ProgramPath");
                 }
             }
@@ -60,7 +60,7 @@ namespace TestServer
                 if (value != _x64ProgramPath)
                 {
                     _x64ProgramPath = value;
-                    SetConfigValue(GetConfigKey("X64ProgramPath"), value);
+                    SetConfigValue(GetConfigKey(Header, "X64ProgramPath"), value);
                     NotifyPropertyChanged("X64ProgramPath");
                 }
             }
@@ -175,10 +175,6 @@ namespace TestServer
             X64ProgramPath = x64ProgramPath;
             
         }
-
-        private string GetConfigKey(string key)
-        {
-            return Header.ToLower() + key;
-        }
+        
     }
 }

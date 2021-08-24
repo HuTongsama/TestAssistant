@@ -38,5 +38,9 @@ namespace GUIBase
             config.AppSettings.Settings[configKey].Value = value;
             config.Save();
         }
+        protected string GetConfigKey(string prefix, string key)
+        {
+            return prefix.ToLower() + key;
+        }
     }
 }

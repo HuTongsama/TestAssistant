@@ -125,17 +125,23 @@
                     </Grid.RowDefinitions>
 
                     <Label Content="默认模板" Margin="0,25,0,25" Grid.Row="0" Grid.Column="0"/>
-                    <ComboBox ItemsSource="{Binding TemplateSetList}" Margin="0,25,0,25" Grid.Row="0" Grid.Column="1">
+                    <ComboBox ItemsSource="{Binding TemplateSetList}" SelectedItem="{Binding SelectedDefaultTemplate}" 
+                              Margin="0,25,0,25" Grid.Row="0" Grid.Column="1">
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="ComboBoxItem">
+                                <Setter Property="IsSelected" Value="{Binding IsSelected}"></Setter>
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding ItemName}"></TextBlock>
-
                             </DataTemplate>
                         </ComboBox.ItemTemplate>
                     </ComboBox>
 
                     <Label Content="读图方式" Margin="0,25,0,25" Grid.Row="1" Grid.Column="0"/>
-                    <ComboBox ItemsSource="{Binding DecodeTypeList}" Margin="0,25,0,25" Grid.Row="1" Grid.Column="1">
+                    <ComboBox ItemsSource="{Binding DecodeTypeList}" SelectedItem="{Binding SelectedDecodeType}" 
+                              Margin="0,25,0,25" Grid.Row="1" Grid.Column="1">
                         <ComboBox.ItemContainerStyle>
                             <Style TargetType="ComboBoxItem">
                                 <Setter Property="IsSelected" Value="{Binding IsSelected}"></Setter>
