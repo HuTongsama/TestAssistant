@@ -209,6 +209,33 @@ namespace TestServer
             GenerateServerData();
 
         }
+
+        private bool _isEnableStartButton = true;
+        public bool IsEnableStartButton 
+        {
+            get => _isEnableStartButton;
+            set
+            {
+                if (value != _isEnableStartButton)
+                {
+                    _isEnableStartButton = value;
+                    NotifyPropertyChanged("IsEnableStartButton");
+                }
+            } 
+        }
+        private string _startButtonText = "启动服务器";
+        public string StartButtonText
+        {
+            get => _startButtonText;
+            set
+            {
+                if (value != _startButtonText)
+                {
+                    _startButtonText = value;
+                    NotifyPropertyChanged("StartButtonText");
+                }
+            }
+        }
         private void OnStartButtonClicked(object obj)
         {          
             var listeningThread = new Thread(_listener.StartListening);
@@ -222,6 +249,8 @@ namespace TestServer
             var testThread = new Thread(StartTest);
             testThread.IsBackground = true;
             testThread.Start();
+            IsEnableStartButton = false;
+            StartButtonText = "运行中";
         }
         private RelayCommand _startButtonCommand;
         public ICommand StartButtonCommand
@@ -326,9 +355,11 @@ namespace TestServer
                         if (DownLoadDllFromFtp(data))
                         {
                             CopyContentToLocalPath(data);
-                            AlgorithmTestJson algorithmTestJson = TransClientToJson(data);                           
-                            string jsonString = JsonSerializer.Serialize(algorithmTestJson);
-                            System.IO.File.WriteAllText(DllPath + "/" + "config.json", jsonString);
+                            AlgorithmTestJson algorithmTestJson = TransClientToJson(data);
+                            JsonSerializerOptions options = new JsonSerializerOptions();
+                            options.WriteIndented = true;
+                            string jsonString = JsonSerializer.Serialize(algorithmTestJson, options);
+                            System.IO.File.WriteAllText(_currentLocalPath + "/config.json", jsonString);
                             if (algorithmTestJson != null)
                             {
                                 LogMessage("Start test " + data.VersionInfo);
@@ -347,7 +378,10 @@ namespace TestServer
                                     data.OperateType = OperateType.Compare;
                                     lock (_compareWaitListLock)
                                     {
-                                        CompareWaitList.Add(data);
+                                        App.Current.Dispatcher.Invoke((Action)delegate
+                                        {
+                                            CompareWaitList.Add(data);
+                                        });                                       
                                     }
                                 }
                                 LogMessage("Test " + data.VersionInfo + " finished");
@@ -384,7 +418,7 @@ namespace TestServer
                 default:
                     return false;
             }
-            args += data.TestVersion + "_" + DateTime.Now.ToString("HHmmss");            
+            args += data.VersionInfo + "_" + DateTime.Now.ToString("HHmmss");            
             ProcessStartInfo processStartInfo = new ProcessStartInfo();
             processStartInfo.UseShellExecute = false;
             processStartInfo.WorkingDirectory = _currentLocalPath;
@@ -403,16 +437,25 @@ namespace TestServer
                 default:
                     return false;
             }
-            Process testProcess = Process.Start(processStartInfo);
-            if (testProcess == null)
+            try
             {
+                Process testProcess = Process.Start(processStartInfo);
+                if (testProcess == null)
+                {
+                    return false;
+                }
+                int exitCode = WaitProcess(testProcess);
+                if (exitCode == 0)
+                    return true;
+                else
+                    return false;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
                 return false;
             }
-            int exitCode = WaitProcess(testProcess);
-            if (exitCode == 0)
-                return true;
-            else
-                return false;
+            
         }
         private void CallCompare()
         {
@@ -596,6 +639,7 @@ namespace TestServer
                     (templateToCsv.Key, new KeyValuePair<string, List<string>>
                     (templateName, templateToCsv.Value)));
             }
+            algorithmTestJson.ImageCsvSet = data.ImageCsvList;
             return algorithmTestJson;
         }
     }

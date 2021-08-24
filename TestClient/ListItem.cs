@@ -150,8 +150,7 @@ namespace TestClient
         }
         public bool UseCustomerRightClick { get; set; } = false;
         public bool UseCustomerLeftClick { get; set; } = false;
-        public Action OwnerCallBack { get; set; } = delegate { };
-        public Action<string> SaveConfig { get; set; } = delegate { };
+        public Action OwnerCallBack { get; set; } = delegate { };       
         private void MouseRightClick(object obj)
         {
             OwnerCallBack();

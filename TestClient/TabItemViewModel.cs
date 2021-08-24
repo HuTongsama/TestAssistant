@@ -36,6 +36,7 @@ namespace TestClient
                 if (value != _state)
                 {
                     _state = value;
+                    SaveConfig(value.ToString());
                     NotifyPropertyChanged("State");
                 }
             }
@@ -106,21 +107,39 @@ namespace TestClient
                 if (value != _keyToPicSet)
                 {
                     _keyToPicSet = value;
+                    Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                    string[] configKeys = config.AppSettings.Settings.AllKeys;
                     foreach (var item in _keyToPicSet)
                     {
                         App.Current.Dispatcher.Invoke((Action)delegate
                         {
-
-                            CheckState tmpState = Enumerable.FirstOrDefault(_keyToCheckState, 
+                            CheckState tmpState = Enumerable.FirstOrDefault(_keyToCheckState,
                                 delegate (CheckState state) { return state.StateKey == item.Key; });
                             if (tmpState != null)
                                 _keyToCheckState.Remove(tmpState);
                             CheckState checkState = new CheckState(item.Key);
+                            string configKey = GetConfigKey(Header, item.Key);
+                            bool stateValue = false;
+                            if (configKeys.Contains(configKey))
+                            {
+                                string configVal = config.AppSettings.Settings[configKey].Value;
+                                if (configVal != string.Empty)
+                                {
+                                    stateValue = bool.Parse(configVal);
+                                }
+                            }
+                            else
+                            {
+                                config.AppSettings.Settings.Add(configKey, "");
+                                config.Save();
+                            }
+                            checkState.State = stateValue;
+                            checkState.SaveConfig = delegate (string configVal) { SetConfigValue(configKey, configVal); };
                             checkState.PropertyChanged += this.CheckStatePropertyChanged;
                             _keyToCheckState.Add(checkState);
                         });
-                        
-                    }                  
+
+                    }
                     NotifyPropertyChanged("KeyToPicSet");
                 }
             }

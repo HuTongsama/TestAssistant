@@ -75,7 +75,7 @@ namespace TestClient
         {
             Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             string selectedProduct = config.AppSettings.Settings["selectedProduct"].Value;
-
+           
             string productName = ProductType.DBR.ToString();
             TabItemViewModel item = new TabItemViewModel(
                 productName,
@@ -246,7 +246,9 @@ namespace TestClient
                 if (_clientData == null)
                     return;
                 //todo: up to ftp
-                string jsonString = JsonSerializer.Serialize(_clientData);
+                JsonSerializerOptions options = new JsonSerializerOptions();
+                options.WriteIndented = true;
+                string jsonString = JsonSerializer.Serialize(_clientData,options);             
                 byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
                 _client.SendData(data);
             }

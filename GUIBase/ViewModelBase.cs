@@ -32,6 +32,7 @@ namespace GUIBase
             return path;
         }
 
+        public Action<string> SaveConfig { get; set; } = delegate { };
         protected void SetConfigValue(string configKey, string value)
         {
             Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
@@ -42,5 +43,6 @@ namespace GUIBase
         {
             return prefix.ToLower() + key;
         }
+        
     }
 }
