@@ -180,18 +180,20 @@ namespace TestServer
                 config.AppSettings.Settings["dbrPicturePath"].Value,
                 config.AppSettings.Settings["dbrTemplatePath"].Value,
                 config.AppSettings.Settings["dbrX86ProgramPath"].Value,
-                config.AppSettings.Settings["dbrX64ProgramPath"].Value);                    
+                config.AppSettings.Settings["dbrX64ProgramPath"].Value,
+                config.AppSettings.Settings["dbrStdVersionPath"].Value);                    
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
-
-
+            
+                     
 
             productName = ProductType.DLR.ToString();
             item = new TabItemViewModel(productName,
                 config.AppSettings.Settings["dlrPicturePath"].Value,
                 config.AppSettings.Settings["dlrTemplatePath"].Value,
                 config.AppSettings.Settings["dlrX86ProgramPath"].Value,
-                config.AppSettings.Settings["dlrX64ProgramPath"].Value);
+                config.AppSettings.Settings["dlrX64ProgramPath"].Value,
+                config.AppSettings.Settings["dlrStdVersionPath"].Value);
             
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
@@ -200,7 +202,8 @@ namespace TestServer
                 config.AppSettings.Settings["dcnPicturePath"].Value,
                 config.AppSettings.Settings["dcnTemplatePath"].Value,
                 config.AppSettings.Settings["dcnX86ProgramPath"].Value,
-                config.AppSettings.Settings["dcnX64ProgramPath"].Value);
+                config.AppSettings.Settings["dcnX64ProgramPath"].Value,
+                config.AppSettings.Settings["dcnStdVersionPath"].Value);
             item.PropertyChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
        
@@ -344,6 +347,17 @@ namespace TestServer
                 {
                     List<string> fileNames = CommonFuction.GetAllFiles(tabItem.TemplatePath, "*.json");
                     serverData.TemplateList = fileNames;
+                }
+                if (tabItem.StdVersionPath != string.Empty)
+                {
+                    DirectoryInfo dirInfo = new DirectoryInfo(tabItem.StdVersionPath);
+                    var subDirs = dirInfo.GetDirectories();
+                    List<string> dirNames = new List<string>();
+                    foreach (var dir in subDirs)
+                    {
+                        dirNames.Add(dir.Name);
+                    }
+                    serverData.StdVersionList = dirNames;
                 }
             }
         }
@@ -503,7 +517,7 @@ namespace TestServer
             {
                 FileSystemWatcher watcher = new FileSystemWatcher();
                 watcher.Path = ConclusionPath;
-                watcher.Created += FolderCreated;
+                watcher.Created += ConclusionFolderCreated;
                 foreach (var data in CompareWaitList)
                 {
                     if (data.StandardVersion == string.Empty)
@@ -539,10 +553,11 @@ namespace TestServer
                 
             }
         }
-        private void FolderCreated(object source, FileSystemEventArgs e)
+        private void ConclusionFolderCreated(object source, FileSystemEventArgs e)
         {
             _newFolderNameInConclusion = e.FullPath;
         }
+        
         private void CallGetPicture(ClientData data)
         {
             if (!System.IO.Directory.Exists(_newFolderNameInConclusion))
@@ -614,12 +629,28 @@ namespace TestServer
                         serverData.TemplateList = fileNames;
                     }
                     break;
+                case "StdVersionPath":
+                    {
+                        DirectoryInfo dirInfo = new DirectoryInfo(item.StdVersionPath);
+                        var subDirs = dirInfo.GetDirectories();
+                        List<string> dirNames = new List<string>();
+                        foreach (var dir in subDirs)
+                        {
+                            dirNames.Add(dir.Name);
+                        }
+                        serverData.StdVersionList = dirNames;
+                    }
+                    break;
                 default:
                     break;
             }
       
             string message = GenerateMessage();
             byte[] data = System.Text.Encoding.ASCII.GetBytes(message);
+            SendToAllClients(data);
+        }
+        private void SendToAllClients(byte[] data)
+        {
             _listener.SendToAllClients(data);
         }
         private string GenerateMessage()

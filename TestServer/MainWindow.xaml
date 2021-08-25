@@ -21,6 +21,7 @@
                     <RowDefinition Height="1*"></RowDefinition>
                     <RowDefinition Height="1*"></RowDefinition>
                     <RowDefinition Height="1*"></RowDefinition>
+                    <RowDefinition Height="1*"></RowDefinition>
                 </Grid.RowDefinitions>
                 <Label Content="图集:" Grid.Row="0" Grid.Column="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"></Label>
                 <TextBox Text="{Binding PictureSetPath}" Grid.Row="0" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"></TextBox>
@@ -37,6 +38,10 @@
                 <Label Content="X64ProgramPath:" Grid.Row="3" Grid.Column="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
                 <TextBox Text="{Binding X64ProgramPath}" Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"/>
                 <Button Content="..." Command="{Binding X64ProgramButtonClicked}" Grid.Row="3" Grid.Column="2"/>
+
+                <Label Content="StdVersionPath:" Grid.Row="4" Grid.Column="0" VerticalContentAlignment="Center" HorizontalContentAlignment="Center"/>
+                <TextBox Text="{Binding StdVersionPath}" Grid.Row="4" Grid.Column="1" TextWrapping="Wrap" VerticalContentAlignment="Center"/>
+                <Button Content="..." Command="{Binding StdVersionButtonCommand}" Grid.Row="4" Grid.Column="2"/>
             </Grid>
         </ControlTemplate>
         <Style x:Key="TabItemStyle" TargetType="{x:Type TabItem}">

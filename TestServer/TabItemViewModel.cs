@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Data;
 using GUIBase;
 namespace TestServer
 {
@@ -19,6 +22,19 @@ namespace TestServer
                 {
                     _pictureSetPath = value;
                     SetConfigValue(GetConfigKey(Header,"PicturePath"), value);
+                    if (_pathToWatcher.ContainsKey(PictureSetPath))
+                    {
+                        FileSystemWatcher watcher = new FileSystemWatcher(PictureSetPath);
+                        watcher.EnableRaisingEvents = true;
+                        
+                        _pathToWatcher[PictureSetPath] = watcher;
+                    }
+                    else
+                    {
+                        FileSystemWatcher watcher = new FileSystemWatcher(PictureSetPath);
+                        watcher.EnableRaisingEvents = true;
+                        _pathToWatcher.Add(PictureSetPath, watcher);
+                    }
                     NotifyPropertyChanged("PictureSetPath");
                 }
             }
@@ -33,6 +49,18 @@ namespace TestServer
                 {
                     _templatePath = value;
                     SetConfigValue(GetConfigKey(Header,"TemplatePath"), value);
+                    if (_pathToWatcher.ContainsKey(TemplatePath))
+                    {
+                        FileSystemWatcher watcher = new FileSystemWatcher(TemplatePath);
+                        watcher.EnableRaisingEvents = true;
+                        _pathToWatcher[TemplatePath] = watcher;
+                    }
+                    else
+                    {
+                        FileSystemWatcher watcher = new FileSystemWatcher(TemplatePath);
+                        watcher.EnableRaisingEvents = true;
+                        _pathToWatcher.Add(TemplatePath, watcher);
+                    }
                     NotifyPropertyChanged("TemplatePath");
                 }
             }
@@ -65,6 +93,34 @@ namespace TestServer
                 }
             }
         }
+        string _stdVersionPath = string.Empty;
+        public string StdVersionPath
+        {
+            get => _stdVersionPath;
+            set
+            {
+                if (value != _stdVersionPath)
+                {
+                    _stdVersionPath = value;
+                    SetConfigValue(GetConfigKey(Header, "StdVersionPath"), value);
+                    if (_pathToWatcher.ContainsKey(StdVersionPath))
+                    {
+                        FileSystemWatcher watcher = new FileSystemWatcher(StdVersionPath);
+                        watcher.EnableRaisingEvents = true;
+                        _pathToWatcher[StdVersionPath] = watcher;
+                    }
+                    else
+                    {
+                        FileSystemWatcher watcher = new FileSystemWatcher(StdVersionPath);
+                        watcher.EnableRaisingEvents = true;
+                        _pathToWatcher.Add(StdVersionPath, watcher);
+                    }
+                    NotifyPropertyChanged("StdVersionPath");
+                }
+            }
+        }
+
+        
         private void OnPicSetPathButtonClicked(object obj)
         {
             string path = OnPathButtonClicked();
@@ -148,6 +204,27 @@ namespace TestServer
                 return _x64ProgramButtonClicked;
             }
         }
+
+        private void OnStdVersionButtonClicked(object obj)
+        {
+            string path = OnPathButtonClicked();
+            if (path != null)
+            {
+                StdVersionPath = path;
+            }
+        }
+        RelayCommand _stdVersionButtonCommand;
+        public ICommand StdVersionButtonCommand
+        {
+            get
+            {
+                if (_stdVersionButtonCommand == null)
+                {
+                    _stdVersionButtonCommand = new RelayCommand(OnStdVersionButtonClicked, delegate { return true; });   
+                }
+                return _stdVersionButtonCommand;
+            }
+        }
         private string _header = string.Empty;
         public string Header
         {
@@ -162,19 +239,47 @@ namespace TestServer
             get => _header;
             
         }
+        public Action<byte[]> SendDataCallback { get; set; } = delegate { };
+        Dictionary<string, FileSystemWatcher> _pathToWatcher = new Dictionary<string, FileSystemWatcher>();
         public TabItemViewModel(string header = "",
             string pictureSetPath = "",
             string templatePath = "",
             string x86ProgramPath = "",
-            string x64ProgramPath = "")
+            string x64ProgramPath = "",
+            string stdVersionPath ="")
         {
             Header = header;
-            PictureSetPath = pictureSetPath;
+            PictureSetPath = pictureSetPath;          
             TemplatePath = templatePath;
             X86ProgramPath = x86ProgramPath;
             X64ProgramPath = x64ProgramPath;
+            StdVersionPath = stdVersionPath;
+        }
+        private void PictureSetContentCreated(object obj, FileSystemEventArgs e)
+        {
+            ServerData serverData = new ServerData();
+            DirectoryInfo dirInfo = new DirectoryInfo(PictureSetPath);
+            var allCsvs = dirInfo.GetFiles("*.csv");
+            foreach (var csv in allCsvs)
+            {
+                serverData.PictureSetList.Add(csv.Name);
+            }
+            Dictionary<string, ServerData> keyValues = new Dictionary<string, ServerData>()
+            {
+                { Header,serverData}
+            };
+            string jsonString = JsonSerializer.Serialize(keyValues);
+            byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
+            SendDataCallback(data);
+
+        }
+        private void TemplateSetContentCreated(object obj, FileSystemEventArgs e)
+        {
             
         }
-        
+        private void StdVersionContentCreated(object obj, FileSystemEventArgs e)
+        {
+            
+        }
     }
 }
