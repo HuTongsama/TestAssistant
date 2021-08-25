@@ -23,7 +23,7 @@ namespace TestServer
     {
         private Listener _listener;
         private TestProcess _testProcess;
-        private bool _endCurrentTest = false;
+        private bool _endCurrentProcess = false;
         private ObservableCollection<TabItemViewModel> _tabItems;
         public ObservableCollection<TabItemViewModel> TabItems
         {
@@ -161,6 +161,7 @@ namespace TestServer
                 return _dllPathButtonCommand;
             }
         }
+        private string _newFolderNameInConclusion = string.Empty;
         public MainWindowViewModel()
         {
             _listener = new Listener();
@@ -169,7 +170,7 @@ namespace TestServer
             _listener.CompareListCallback = UpdateCompareListCallback;
 
             _testProcess = new TestProcess();
-            _endCurrentTest = false;
+            _endCurrentProcess = false;
             _tabItems = new ObservableCollection<TabItemViewModel>();
 
             Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
@@ -266,7 +267,7 @@ namespace TestServer
         }
         private void OnEndButtonClicked(object obj)
         {
-            _endCurrentTest = true;
+            _endCurrentProcess = true;
         }
         private RelayCommand _endButtonCommand;
         public ICommand EndButtonCommand
@@ -280,14 +281,25 @@ namespace TestServer
                 return _endButtonCommand;
             }
         }
-
+        private TabItemViewModel GetTabModelByProduct(ProductType productType)
+        {
+            TabItemViewModel productTab = null;
+            foreach (var tab in TabItems)
+            {
+                if (tab.Header == productType.ToString())
+                {
+                    productTab = tab;
+                    break;
+                }
+            }
+            return productTab;
+        }
         private void GenerateServerData()
         {
             foreach (var tabItem in TabItems)
             {
                 string key = tabItem.Header;
-                ServerData serverData = new ServerData();
-                serverData.DataType = "ServerData";
+                ServerData serverData = new ServerData();              
                 _keyToData.Add(key, serverData);
 
                 switch (key)
@@ -358,6 +370,7 @@ namespace TestServer
                             AlgorithmTestJson algorithmTestJson = TransClientToJson(data);
                             JsonSerializerOptions options = new JsonSerializerOptions();
                             options.WriteIndented = true;
+                            options.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
                             string jsonString = JsonSerializer.Serialize(algorithmTestJson, options);
                             System.IO.File.WriteAllText(_currentLocalPath + "/config.json", jsonString);
                             if (algorithmTestJson != null)
@@ -366,26 +379,53 @@ namespace TestServer
                                 if (!CallTest(data))
                                 {
                                     LogMessage("CallTest failed " + data.VersionInfo);
-                                    if (_endCurrentTest)
-                                    {
-                                        _endCurrentTest = false;
-                                    }
                                     //todo: clear current test file
-                                    continue;
-                                }
-                                if (data.StandardVersion != string.Empty)
-                                {
-                                    data.OperateType = OperateType.Compare;
-                                    lock (_compareWaitListLock)
+                                    TabItemViewModel productTab = GetTabModelByProduct(data.ProductType);
+                                    if (productTab != null)
                                     {
-                                        App.Current.Dispatcher.Invoke((Action)delegate
+                                        string csvPath = productTab.PictureSetPath;
+                                        DirectoryInfo dirInfo = new DirectoryInfo(csvPath);
+                                        FileInfo[] fileList = dirInfo.GetFiles("_.csv");
+                                        foreach (var file in fileList)
                                         {
-                                            CompareWaitList.Add(data);
-                                        });                                       
+                                            File.Delete(file.FullName);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    if (data.OperateType == OperateType.Performance)
+                                    {
+                                                                                
+                                        TabItemViewModel productTab = GetTabModelByProduct(data.ProductType);
+                                        if (productTab != null)
+                                        {
+                                            string resultPath = ResultPath + "/" + data.VersionInfo;
+                                            Directory.CreateDirectory(resultPath);
+                                            string csvPath = productTab.PictureSetPath;
+                                            DirectoryInfo dirInfo = new DirectoryInfo(csvPath);
+                                            FileInfo[] fileList = dirInfo.GetFiles("*_.csv");
+                                            foreach (var file in fileList)
+                                            {
+                                                File.Move(file.FullName, Path.Combine(resultPath, file.Name));
+                                            }
+                                        }
+                                    }
+                                   
+                                    if (data.StandardVersion != string.Empty)
+                                    {
+                                        data.OperateType = OperateType.Compare;
+                                        lock (_compareWaitListLock)
+                                        {
+                                            App.Current.Dispatcher.Invoke((Action)delegate
+                                            {
+                                                CompareWaitList.Add(data);
+                                            });
+                                        }
                                     }
                                 }
                                 LogMessage("Test " + data.VersionInfo + " finished");
-                                //CallCompare();
+                                CallCompare();
                                 //CallGetPicture();
                                 
                             }
@@ -461,8 +501,35 @@ namespace TestServer
         {
             lock (_compareWaitListLock)
             {
+                FileSystemWatcher watcher = new FileSystemWatcher();
+                watcher.Path = ConclusionPath;
+                watcher.Created += FolderCreated;
                 foreach (var data in CompareWaitList)
                 {
+                    if (data.StandardVersion == string.Empty)
+                        continue;
+                    string stdPath = ResultPath + "/" + data.StandardVersion;
+                    string cmpPath = ResultPath + "/" + data.TestVersion;
+                    string args = ConclusionPath + "/" + " " + stdPath + " " + cmpPath;
+                    ProcessStartInfo processStartInfo = new ProcessStartInfo();
+                    processStartInfo.UseShellExecute = false;
+                    processStartInfo.WorkingDirectory = _currentLocalPath;
+                    processStartInfo.Arguments = args;
+                    processStartInfo.FileName = _currentLocalPath + "/" + "CSVConclusion.exe";
+                    Process compareProcess = Process.Start(processStartInfo);
+                    if (compareProcess == null)
+                        continue;
+                    LogMessage("Start compare " + data.TestVersion);
+                    int exitCode = WaitProcess(compareProcess);
+                    LogMessage("Compare finished");
+                    if (exitCode == 0)
+                    {
+                        CallGetPicture(data);
+                    }
+                    else
+                    {
+                        continue;
+                    }
                     //to compare
                 }
                 App.Current.Dispatcher.Invoke((Action)delegate
@@ -472,19 +539,47 @@ namespace TestServer
                 
             }
         }
-        private void CallGetPicture()
-        { }
+        private void FolderCreated(object source, FileSystemEventArgs e)
+        {
+            _newFolderNameInConclusion = e.FullPath;
+        }
+        private void CallGetPicture(ClientData data)
+        {
+            if (!System.IO.Directory.Exists(_newFolderNameInConclusion))
+                return;
+            ProcessStartInfo processStartInfo = new ProcessStartInfo();
+            processStartInfo.UseShellExecute = false;
+            processStartInfo.WorkingDirectory = _currentLocalPath;
+            processStartInfo.Arguments = _newFolderNameInConclusion;
+            processStartInfo.FileName = _currentLocalPath + "/" + "GetDiffPicture.exe";
+            LogMessage("Start getPicture");
+            Process compareProcess = Process.Start(processStartInfo);
+            LogMessage("GetPicture finished");
+            if (compareProcess == null)
+                return;
+            int exitCode = WaitProcess(compareProcess);
+            if (exitCode == 0)
+            {
+                string path = "Testing/" + data.UserName;
+                FTPHelper ftpHelper = new FTPHelper();
+                DirectoryInfo dirInfo = new DirectoryInfo(_newFolderNameInConclusion);
+                ftpHelper.UploadDirectory(dirInfo, path);
+            }
+            return;
+        }
         private int WaitProcess(Process process)
         {
             while (true)
             {
-                if (_endCurrentTest)
+                if (_endCurrentProcess)
                 {
                     process.Kill();
                     process.WaitForExit();
                 }
                 if (process.HasExited)
                 {
+                    if (_endCurrentProcess)
+                        _endCurrentProcess = false;
                     return process.ExitCode;
                 }
             }
@@ -504,8 +599,7 @@ namespace TestServer
             {
                 serverData = new ServerData();
                 _keyToData.Add(key, serverData);
-            }
-            serverData.DataType = "ServerData";
+            }           
             switch (e.PropertyName)
             {
                 case "PictureSetPath":
@@ -607,15 +701,8 @@ namespace TestServer
             AlgorithmTestJson algorithmTestJson = null;
             ProductType productType = data.ProductType;
             OperateType operateType = data.OperateType;
-            TabItemViewModel productTab = null;
-            foreach (var tab in TabItems)
-            {
-                if (tab.Header == productType.ToString())
-                {
-                    productTab = tab;
-                    break;
-                }
-            }
+            TabItemViewModel productTab = GetTabModelByProduct(productType);
+            
             if (productTab == null)
             {
                 return algorithmTestJson;
@@ -632,12 +719,23 @@ namespace TestServer
                 templateName = "Test1";
             else if (productType == ProductType.DLR)
                 templateName = "locr";
-            algorithmTestJson.DefaultTemplate = new KeyValuePair<string, string>(templateName, data.DefaultTemplate);
+            algorithmTestJson.DefaultTemplate = new Dictionary<string, string>()
+            {
+                {data.DefaultTemplate, templateName }
+            };
             foreach (var templateToCsv in data.TemplateToCsvSet)
             {
-                algorithmTestJson.Template.Add(new KeyValuePair<string, KeyValuePair<string, List<string>>>
-                    (templateToCsv.Key, new KeyValuePair<string, List<string>>
-                    (templateName, templateToCsv.Value)));
+                algorithmTestJson.Template.Add(new Dictionary<string, Dictionary<string, List<string>>>
+                    ()
+                {
+                    { 
+                        templateToCsv.Key,
+                        new Dictionary<string, List<string>>()
+                        {
+                            { templateName,templateToCsv.Value }
+                        }
+                    }
+                });
             }
             algorithmTestJson.ImageCsvSet = data.ImageCsvList;
             return algorithmTestJson;

@@ -16,9 +16,9 @@ namespace TestServer
         public string FilePath { get; set; } = string.Empty;
         public string TemplatePath { get; set; } = string.Empty;
         public string DecodeType { get; set; } = string.Empty;
-        public KeyValuePair<string, string> DefaultTemplate { get; set; } = new KeyValuePair<string, string>();
+        public Dictionary<string, string> DefaultTemplate { get; set; } = new Dictionary<string, string>();
         public List<string> ImageCsvSet { get; set; } = new List<string>();
-        public List<KeyValuePair<string, KeyValuePair<string, List<string>>>> Template { get; set; } =
-            new List<KeyValuePair<string, KeyValuePair<string, List<string>>>>();
+        public List<Dictionary<string, Dictionary<string, List<string>>>> Template { get; set; } =
+            new List<Dictionary<string, Dictionary<string, List<string>>>>();
     }
 }

@@ -125,5 +125,23 @@ namespace FTP
             return false;
         }
 
+        public void UploadDirectory(DirectoryInfo localDirectory, string dstPath)
+        {
+            var files = localDirectory.GetFiles();
+            var directories = localDirectory.GetDirectories();
+
+            if (MakeDirectory(dstPath))
+            {
+                foreach (var file in files)
+                {
+                    Upload(file, dstPath);
+                }
+            }
+            foreach (var dir in directories)
+            {
+                UploadDirectory(dir, dstPath + "/" + dir.Name);
+            }
+        }
+
     }
 }

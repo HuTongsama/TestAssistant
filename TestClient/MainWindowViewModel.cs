@@ -142,41 +142,33 @@ namespace TestClient
                     {
                         string key = tabData.Key;
                         ServerData serverData = tabData.Value;
-                        if (serverData.DataType == "Message")
+                        if (_tabItems.ContainsKey(key))
                         {
+                            TabItemViewModel curTab = _tabItems[key];
+                            SameListItem sameListItem = new SameListItem();
 
-                        }
-                        else if (serverData.DataType == "ServerData")
-                        {
-                            if (_tabItems.ContainsKey(key))
+                            UpdateTabCollection(serverData.PictureSetList, curTab.PictureSetList, sameListItem);
+                            UpdateTabCollection(serverData.TemplateList, curTab.TemplateSetList,
+                                sameListItem,
+                                delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DefaultTemplate"), configValue); });
+                            UpdateTabCollection(serverData.DecodeTypeList, curTab.DecodeTypeList,
+                                sameListItem,
+                                delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DecodeType"), configValue); });
+
+                            Dictionary<string, List<ListItem>> tmpKeyToPicSet = new Dictionary<string, List<ListItem>>();
+                            foreach (var keyPair in serverData.KeyToPictureSet)
                             {
-                                TabItemViewModel curTab = _tabItems[key];
-                                SameListItem sameListItem = new SameListItem();
-                               
-                                UpdateTabCollection(serverData.PictureSetList, curTab.PictureSetList, sameListItem);
-                                UpdateTabCollection(serverData.TemplateList, curTab.TemplateSetList,
-                                    sameListItem,
-                                    delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DefaultTemplate"), configValue); });
-                                UpdateTabCollection(serverData.DecodeTypeList, curTab.DecodeTypeList,
-                                    sameListItem,
-                                    delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DecodeType"), configValue); });
-                               
-                                Dictionary<string, List<ListItem>> tmpKeyToPicSet = new Dictionary<string, List<ListItem>>();
-                                foreach (var keyPair in serverData.KeyToPictureSet)
+                                string tmpKey = keyPair.Key;
+                                List<String> tmpValue = keyPair.Value;
+                                List<ListItem> tmpList = new List<ListItem>();
+                                foreach (var str in tmpValue)
                                 {
-                                    string tmpKey = keyPair.Key;
-                                    List<String> tmpValue = keyPair.Value;
-                                    List<ListItem> tmpList = new List<ListItem>();
-                                    foreach (var str in tmpValue)
-                                    {
-                                        tmpList.Add(new ListItem(str));
-                                    }
-                                    tmpKeyToPicSet.Add(tmpKey, tmpList);
+                                    tmpList.Add(new ListItem(str));
                                 }
-                                curTab.KeyToPicSet = tmpKeyToPicSet;
+                                tmpKeyToPicSet.Add(tmpKey, tmpList);
                             }
-                        }
-                        //TabItems.
+                            curTab.KeyToPicSet = tmpKeyToPicSet;
+                        }                    
                     }
                 }
                 catch (Exception)
@@ -248,20 +240,21 @@ namespace TestClient
                 //todo: up to ftp
                 JsonSerializerOptions options = new JsonSerializerOptions();
                 options.WriteIndented = true;
+                //options.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
                 string jsonString = JsonSerializer.Serialize(_clientData,options);             
                 byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
                 _client.SendData(data);
             }
         }
-        private bool UploadDll()
+        private bool UploadDll(string ftpPath)
         {
             List<string> dllPathList = new List<string>();
             if (SelectedItem.X64Path != string.Empty)
                 dllPathList.Add(SelectedItem.X64Path);
             if (SelectedItem.X86Path != string.Empty)
                 dllPathList.Add(SelectedItem.X86Path);
-            FTPHelper ftpHelper = new FTPHelper();
-            if (ftpHelper.MakeDirectory(_ftpCachePath))
+            FTPHelper ftpHelper = new FTPHelper();            
+            if (ftpHelper.MakeDirectory(ftpPath))
             {
                 foreach (var path in dllPathList)
                 {
@@ -269,7 +262,7 @@ namespace TestClient
                     FileInfo[] files = dirInfo.GetFiles("*.dll", SearchOption.AllDirectories);
                     foreach (var file in files)
                     {
-                        ftpHelper.Upload(file, _ftpCachePath);
+                        ftpHelper.Upload(file, ftpPath);
                     }
                 }
             }
@@ -331,9 +324,10 @@ namespace TestClient
                 string errMessage = string.Empty;
                 if (DataCheck(data, out errMessage))
                 {
-                    if (UploadDll())
-                    {
-                        data.FtpCachePath = _ftpCachePath;
+                    string ftpCachePath = _ftpCachePath + "/" + data.VersionInfo;
+                    data.FtpCachePath = ftpCachePath;
+                    if (UploadDll(ftpCachePath))
+                    {                       
                         _needSendData = true;
                         _clientData = data;
                     }
