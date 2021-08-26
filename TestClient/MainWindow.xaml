@@ -214,7 +214,7 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        
+
         <Style x:Key="ListBoxItemStyle1" TargetType="{x:Type ListBoxItem}">
             <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="Padding" Value="4,1"/>
@@ -271,9 +271,16 @@
         </Grid.ColumnDefinitions>
         <TabControl ItemsSource="{Binding TabItems.Values}" ItemContainerStyle="{StaticResource TabItemStyle}" SelectedItem="{Binding SelectedItem}" 
                     HorizontalAlignment="Left" Height="451" Margin="10,10,0,0" VerticalAlignment="Top" Width="996" Grid.ColumnSpan="2"/>
-        <Button Content="稳定性测试" Command="{Binding StabilityButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="342,516,0,0" VerticalAlignment="Top" Width="75"/>
-        <Button Content="性能测试" Command="{Binding PerformanceButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="219,516,0,0" VerticalAlignment="Top" Width="75"/>
-
-
+        <Button Content="稳定性测试" Command="{Binding StabilityButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="388,592,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button Content="性能测试" Command="{Binding PerformanceButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="388,506,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button Content="比较" Command="{Binding CompareButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="388,682,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="2.693,0.474"/>
+        <ScrollViewer HorizontalAlignment="Left" Height="195" Margin="10,506,0,0" VerticalAlignment="Top" Width="378">
+            <TextBlock Text="{Binding ViewMessage}"/>
+        </ScrollViewer>
+        <ListBox ItemsSource="{Binding ServerTestList}" HorizontalAlignment="Left" Height="195" Margin="405,506,0,0" VerticalAlignment="Top" Width="189" Grid.ColumnSpan="2"/>
+        <ListBox ItemsSource="{Binding ServerCompareList}" HorizontalAlignment="Left" Height="195" Margin="132,506,0,0" VerticalAlignment="Top" Width="189" Grid.Column="1"/>
+        <Label Content="MessageConsole" HorizontalAlignment="Left" Margin="10,476,0,0" VerticalAlignment="Top" Width="106"/>
+        <Label Content="测试等待队列" HorizontalAlignment="Left" Margin="405,476,0,0" VerticalAlignment="Top" Width="86"/>
+        <Label Content="比较等待队列" Grid.Column="1" HorizontalAlignment="Left" Margin="132,476,0,0" VerticalAlignment="Top" Width="83"/>
     </Grid>
 </Window>

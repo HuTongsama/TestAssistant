@@ -109,7 +109,7 @@
 
         <Label Content="Message" HorizontalAlignment="Left" Margin="506,199,0,0" VerticalAlignment="Top" Width="133" Height="29"/>
         <ScrollViewer gui:AutoScrollBehavior.AutoScroll="True" HorizontalAlignment="Left" Height="137" Margin="506,233,0,0" VerticalAlignment="Top" Width="262">
-            <TextBlock TextWrapping="Wrap" Text="{Binding ConsoleMessage}"/>
+            <TextBlock TextWrapping="Wrap" Text="{Binding ViewMessage}"/>
         </ScrollViewer>
         <Grid HorizontalAlignment="Left" Height="172" Margin="506,10,0,0" VerticalAlignment="Top" Width="262">
             <Grid.ColumnDefinitions>

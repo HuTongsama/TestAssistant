@@ -26,13 +26,14 @@ namespace TestServer
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(PictureSetPath);
                         watcher.EnableRaisingEvents = true;
-                        
+                        watcher.Created += PictureSetContentCreated;
                         _pathToWatcher[PictureSetPath] = watcher;
                     }
                     else
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(PictureSetPath);
                         watcher.EnableRaisingEvents = true;
+                        watcher.Created += PictureSetContentCreated;
                         _pathToWatcher.Add(PictureSetPath, watcher);
                     }
                     NotifyPropertyChanged("PictureSetPath");
@@ -53,12 +54,14 @@ namespace TestServer
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(TemplatePath);
                         watcher.EnableRaisingEvents = true;
+                        watcher.Created += TemplateSetContentCreated;
                         _pathToWatcher[TemplatePath] = watcher;
                     }
                     else
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(TemplatePath);
                         watcher.EnableRaisingEvents = true;
+                        watcher.Created += TemplateSetContentCreated;
                         _pathToWatcher.Add(TemplatePath, watcher);
                     }
                     NotifyPropertyChanged("TemplatePath");
@@ -107,12 +110,14 @@ namespace TestServer
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(StdVersionPath);
                         watcher.EnableRaisingEvents = true;
+                        watcher.Created += StdVersionContentCreated;
                         _pathToWatcher[StdVersionPath] = watcher;
                     }
                     else
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(StdVersionPath);
-                        watcher.EnableRaisingEvents = true;
+                        watcher.Created += StdVersionContentCreated;
+                        watcher.EnableRaisingEvents = true;                      
                         _pathToWatcher.Add(StdVersionPath, watcher);
                     }
                     NotifyPropertyChanged("StdVersionPath");
@@ -275,11 +280,37 @@ namespace TestServer
         }
         private void TemplateSetContentCreated(object obj, FileSystemEventArgs e)
         {
-            
+            ServerData serverData = new ServerData();
+            DirectoryInfo dirInfo = new DirectoryInfo(PictureSetPath);
+            var allJsons = dirInfo.GetFiles("*.json");
+            foreach (var template in allJsons)
+            {
+                serverData.TemplateList.Add(template.Name);
+            }
+            Dictionary<string, ServerData> keyValues = new Dictionary<string, ServerData>()
+            {
+                { Header,serverData}
+            };
+            string jsonString = JsonSerializer.Serialize(keyValues);
+            byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
+            SendDataCallback(data);
         }
         private void StdVersionContentCreated(object obj, FileSystemEventArgs e)
         {
-            
+            ServerData serverData = new ServerData();
+            DirectoryInfo dirInfo = new DirectoryInfo(PictureSetPath);
+            var allDirs = dirInfo.GetDirectories();
+            foreach (var dir in allDirs)
+            {
+                serverData.StdVersionList.Add(dir.Name);
+            }
+            Dictionary<string, ServerData> keyValues = new Dictionary<string, ServerData>()
+            {
+                { Header,serverData}
+            };
+            string jsonString = JsonSerializer.Serialize(keyValues);
+            byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
+            SendDataCallback(data);
         }
     }
 }

@@ -28,7 +28,7 @@ namespace TestServer
             }
         }      
         private string _recceiveString = string.Empty;
-        public Func<string> GennerateMessage { get; set; }
+        public Func<List<ServerData>> GetServerData { get; set; }
         public Action<List<ClientData>> TestListCallback { get; set; }
         public Action<List<ClientData>> CompareListCallback { get; set; }
         public Listener()
@@ -75,6 +75,14 @@ namespace TestServer
                     _clientSockets.RemoveAt(socketId);
                     socketId--;
                 }
+            }
+        }
+        public void SendToClient(Socket client, byte[] data)
+        {
+            byte[] message = PackData(data);
+            if (IsConnected(client))
+            {
+                SyncSend(client, data);
             }
         }
         public void ReceiveMessage()
@@ -130,10 +138,14 @@ namespace TestServer
             { 
                 _clientSockets.Add(acceptSocket);
             }
-            string message = GennerateMessage();
-            byte[] messageBuf = System.Text.Encoding.ASCII.GetBytes(message);
-            byte[] finalBuf = PackData(messageBuf);          
-            SyncSend(acceptSocket, finalBuf);
+            var serverDataList = GetServerData();
+            foreach (var serverData in serverDataList)
+            {
+                string jsonString = JsonSerializer.Serialize(serverData);
+                byte[] messageBuf = System.Text.Encoding.ASCII.GetBytes(jsonString);
+                byte[] finalBuf = PackData(messageBuf);
+                SyncSend(acceptSocket, finalBuf);
+            }         
             _listenSocket.BeginAccept(AcceptCallback, _listenSocket);
 
         }

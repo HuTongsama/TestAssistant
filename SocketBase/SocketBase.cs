@@ -38,9 +38,13 @@ namespace SocketBase
             InitPacket();
             _dataHead = null;
             _totalRead = 0;
+            int needReadLength = DataHead.GetDataHeadLength();
             while (true)
             {
-                int byteRead = socket.Receive(_packet, _packetPos, _packetSize - _packetPos, 0);
+
+                int readLength = Math.Min(needReadLength, _packetSize - _packetPos);
+                int byteRead = socket.Receive(_packet, _packetPos, readLength, 0);
+                needReadLength -= byteRead;
                 _totalRead += byteRead;
                 _packetPos += byteRead;
                 if (byteRead > 0)
@@ -66,6 +70,7 @@ namespace SocketBase
                                 MessageBox.Show("Create DataHead Failed");
                                 break;
                             }
+                            needReadLength = _dataHead.DataLength;
                             _stringBuilder.Append(Encoding.ASCII.GetString(_packet, headLength, _packetPos - headLength));
                             InitPacket();
                         }

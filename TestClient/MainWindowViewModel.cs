@@ -71,6 +71,20 @@ namespace TestClient
             ClientData data = GenerateClientData();
             ButtonClickAction(data, OperateType.Compare);
         }
+        private RelayCommand _compareButtonCommand;
+        public ICommand CompareButtonCommand
+        {
+            get
+            {
+                if (_compareButtonCommand == null)
+                {
+                    _compareButtonCommand = new RelayCommand(OnCompareButtonClick, delegate { return true; });
+                }
+                return _compareButtonCommand;
+            }
+        }
+        public ObservableCollection<ListItem> ServerTestList = new ObservableCollection<ListItem>();
+        public ObservableCollection<ListItem> ServerCompareList = new ObservableCollection<ListItem>();
         public MainWindowViewModel()
         {
             Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
@@ -137,38 +151,72 @@ namespace TestClient
                 string receiveData = _client.ReceiveData();
                 try
                 {
-                    var jsonValue = JsonSerializer.Deserialize<Dictionary<string, ServerData>>(receiveData);
-                    foreach (var tabData in jsonValue)
+                    var serverData = JsonSerializer.Deserialize<ServerData>(receiveData);
+
+                    if (serverData.ProductType != string.Empty)
                     {
-                        string key = tabData.Key;
-                        ServerData serverData = tabData.Value;
-                        if (_tabItems.ContainsKey(key))
+                        SameListItem sameListItem = new SameListItem();
+                        if (_tabItems.ContainsKey(serverData.ProductType))
                         {
-                            TabItemViewModel curTab = _tabItems[key];
-                            SameListItem sameListItem = new SameListItem();
-
-                            UpdateTabCollection(serverData.PictureSetList, curTab.PictureSetList, sameListItem);
-                            UpdateTabCollection(serverData.TemplateList, curTab.TemplateSetList,
-                                sameListItem,
-                                delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DefaultTemplate"), configValue); });
-                            UpdateTabCollection(serverData.DecodeTypeList, curTab.DecodeTypeList,
-                                sameListItem,
-                                delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DecodeType"), configValue); });
-
-                            Dictionary<string, List<ListItem>> tmpKeyToPicSet = new Dictionary<string, List<ListItem>>();
-                            foreach (var keyPair in serverData.KeyToPictureSet)
+                            TabItemViewModel curTab = _tabItems[serverData.ProductType];                          
+                            if (serverData.PictureSetList.Count > 0)
                             {
-                                string tmpKey = keyPair.Key;
-                                List<String> tmpValue = keyPair.Value;
-                                List<ListItem> tmpList = new List<ListItem>();
-                                foreach (var str in tmpValue)
-                                {
-                                    tmpList.Add(new ListItem(str));
-                                }
-                                tmpKeyToPicSet.Add(tmpKey, tmpList);
+                                UpdateTabCollection(serverData.PictureSetList, curTab.PictureSetList, sameListItem);
                             }
-                            curTab.KeyToPicSet = tmpKeyToPicSet;
-                        }                    
+                            if (serverData.TemplateList.Count > 0)
+                            {
+                                UpdateTabCollection(serverData.TemplateList, curTab.TemplateSetList,
+                                   sameListItem,
+                                   delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DefaultTemplate"), configValue); });
+                            }
+                            if (serverData.DecodeTypeList.Count > 0)
+                            {
+                                UpdateTabCollection(serverData.DecodeTypeList, curTab.DecodeTypeList,
+                                  sameListItem,
+                                  delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DecodeType"), configValue); });
+                            }
+                            if (serverData.KeyToPictureSet.Count > 0)
+                            {
+                                Dictionary<string, List<ListItem>> tmpKeyToPicSet = new Dictionary<string, List<ListItem>>();
+                                foreach (var keyPair in serverData.KeyToPictureSet)
+                                {
+                                    string tmpKey = keyPair.Key;
+                                    List<String> tmpValue = keyPair.Value;
+                                    List<ListItem> tmpList = new List<ListItem>();
+                                    foreach (var str in tmpValue)
+                                    {
+                                        tmpList.Add(new ListItem(str));
+                                    }
+                                    tmpKeyToPicSet.Add(tmpKey, tmpList);
+                                }
+                                curTab.KeyToPicSet = tmpKeyToPicSet;
+                            }
+                            if (serverData.StdVersionList.Count > 0)
+                            {
+                                UpdateTabCollection(serverData.StdVersionList, curTab.StandardVersionList, sameListItem);
+                            }                          
+                            if (serverData.FinishedVersionInfo != string.Empty)
+                            {
+                                App.Current.Dispatcher.Invoke((Action)
+                                    delegate
+                                    {
+                                        ListItem listItem = new ListItem(serverData.FinishedVersionInfo);
+                                        curTab.TestVersionList.Add(listItem);
+                                    });
+                            }
+                        }
+                        if (serverData.TestWaitingList.Count > 0)
+                        {
+                            UpdateTabCollection(serverData.TestWaitingList, ServerTestList, sameListItem);
+                        }
+                        if (serverData.CompareWaitingList.Count > 0)
+                        {
+                            UpdateTabCollection(serverData.CompareWaitingList, ServerCompareList, sameListItem);
+                        }
+                        if (serverData.Message != string.Empty)
+                        {
+                            LogMessage(serverData.Message);
+                        }
                     }
                 }
                 catch (Exception)
@@ -278,23 +326,25 @@ namespace TestClient
             bool isValid = true;
             if (data.OperateType != OperateType.Compare)
             {
-                if (data.DefaultTemplate == string.Empty)
+                if (data.DefaultTemplate == null || data.DefaultTemplate == string.Empty)
                 {
                     isValid = false;
                     errMessage += "invalid DefaultTemplate\n";
                 }
-                if (data.TestDataType == TestDataType.Empty)
+                if (data.TestDataType == null || data.TestDataType == TestDataType.Empty)
                 {
                     isValid = false;
                     errMessage += "invalid TestDataType\n";
                 }
-                if (SelectedItem.X64Path == string.Empty
+                if (SelectedItem.X64Path == null ||
+                    SelectedItem.X64Path == string.Empty
                     || !System.IO.Directory.Exists(SelectedItem.X64Path))
                 {
                     isValid = false;
                     errMessage += "invalid X64Path\n";
                 }
-                if (SelectedItem.X86Path == string.Empty
+                if (SelectedItem.X86Path == null||
+                    SelectedItem.X86Path == string.Empty
                     || !System.IO.Directory.Exists(SelectedItem.X86Path))
                 {
                     isValid = false;
@@ -303,12 +353,14 @@ namespace TestClient
             }
             else
             {
-                if (data.TestVersion == string.Empty)
+                if (data.TestVersion == null ||
+                    data.TestVersion == string.Empty)
                 {
                     isValid = false;
                     errMessage += "invalid TestVersion\n";
                 }
-                if (data.StandardVersion == string.Empty)
+                if (data.StandardVersion == null ||
+                    data.StandardVersion == string.Empty)
                 {
                     isValid = false;
                     errMessage += "invalid StandardVersion\n";
@@ -326,10 +378,18 @@ namespace TestClient
                 {
                     string ftpCachePath = _ftpCachePath + "/" + data.VersionInfo;
                     data.FtpCachePath = ftpCachePath;
-                    if (UploadDll(ftpCachePath))
-                    {                       
+                    if (data.OperateType == OperateType.Compare)
+                    {
                         _needSendData = true;
                         _clientData = data;
+                    }
+                    else
+                    {
+                        if (UploadDll(ftpCachePath))
+                        {
+                            _needSendData = true;
+                            _clientData = data;
+                        }
                     }
                 }
                 else

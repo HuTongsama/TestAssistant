@@ -20,6 +20,20 @@ namespace GUIBase
             }
         }
 
+        private string _logMessage = string.Empty;
+
+        public string ViewMessage
+        {
+            get => _logMessage;
+            set
+            {
+                if (value != _logMessage)
+                {
+                    _logMessage = value;
+                    NotifyPropertyChanged("ViewMessage");
+                }
+            }
+        }
         protected string OnPathButtonClicked()
         {
             string path = null;
@@ -31,7 +45,11 @@ namespace GUIBase
             }
             return path;
         }
-
+        protected void LogMessage(string message)
+        {
+            string logInfo = ViewMessage + "\n" + message + "\n";
+            ViewMessage = logInfo;
+        }
         public Action<string> SaveConfig { get; set; } = delegate { };
         protected void SetConfigValue(string configKey, string value)
         {

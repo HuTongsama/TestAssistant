@@ -41,19 +41,7 @@ namespace TestServer
         private readonly object _testWaitListLock = new object();
         public ObservableCollection<ClientData> CompareWaitList { get; set; } = new ObservableCollection<ClientData>();     
         private readonly object _compareWaitListLock = new object();
-        private string _consoleMessage = string.Empty;
-        public string ConsoleMessage
-        {
-            get => _consoleMessage;
-            set 
-            {
-                if (value != _consoleMessage)
-                {
-                    _consoleMessage = value;
-                    NotifyPropertyChanged("ConsoleMessage");
-                }
-            }
-        }
+
 
         private string _resultPath = string.Empty;
         public string ResultPath
@@ -165,7 +153,7 @@ namespace TestServer
         public MainWindowViewModel()
         {
             _listener = new Listener();
-            _listener.GennerateMessage = GenerateMessage;
+            _listener.GetServerData = GenerateServerDataList;
             _listener.TestListCallback = UpdateTestListCallback;
             _listener.CompareListCallback = UpdateCompareListCallback;
 
@@ -183,6 +171,7 @@ namespace TestServer
                 config.AppSettings.Settings["dbrX64ProgramPath"].Value,
                 config.AppSettings.Settings["dbrStdVersionPath"].Value);                    
             item.PropertyChanged += this.TabItemPropertyChanged;
+            item.SendDataCallback = SendToAllClients;
             _tabItems.Add(item);
             
                      
@@ -193,9 +182,9 @@ namespace TestServer
                 config.AppSettings.Settings["dlrTemplatePath"].Value,
                 config.AppSettings.Settings["dlrX86ProgramPath"].Value,
                 config.AppSettings.Settings["dlrX64ProgramPath"].Value,
-                config.AppSettings.Settings["dlrStdVersionPath"].Value);
-            
+                config.AppSettings.Settings["dlrStdVersionPath"].Value);            
             item.PropertyChanged += this.TabItemPropertyChanged;
+            item.SendDataCallback = SendToAllClients;
             _tabItems.Add(item);
             productName = ProductType.DCN.ToString();
             item = new TabItemViewModel(productName,
@@ -205,6 +194,7 @@ namespace TestServer
                 config.AppSettings.Settings["dcnX64ProgramPath"].Value,
                 config.AppSettings.Settings["dcnStdVersionPath"].Value);
             item.PropertyChanged += this.TabItemPropertyChanged;
+            item.SendDataCallback = SendToAllClients;
             _tabItems.Add(item);
        
             ResultPath = config.AppSettings.Settings["resultPath"].Value;
@@ -302,7 +292,8 @@ namespace TestServer
             foreach (var tabItem in TabItems)
             {
                 string key = tabItem.Header;
-                ServerData serverData = new ServerData();              
+                ServerData serverData = new ServerData();
+                serverData.ProductType = key;
                 _keyToData.Add(key, serverData);
 
                 switch (key)
@@ -374,7 +365,7 @@ namespace TestServer
                         App.Current.Dispatcher.Invoke((Action)delegate
                        {
                            TestWaitList.RemoveAt(0);
-                       });                      
+                       });
                     }
                     if (data != null)
                     {
@@ -387,13 +378,29 @@ namespace TestServer
                             options.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
                             string jsonString = JsonSerializer.Serialize(algorithmTestJson, options);
                             System.IO.File.WriteAllText(_currentLocalPath + "/config.json", jsonString);
+                            ServerData serverData = new ServerData();
+                            string message = string.Empty;
+                            serverData.ProductType = data.ProductType.ToString();
                             if (algorithmTestJson != null)
                             {
-                                LogMessage("Start test " + data.VersionInfo);
+                                message = "Start test " + data.VersionInfo;
+                                LogMessage(message);
+                                serverData.Message = message;
+                                foreach (var waitItem in TestWaitList)
+                                {
+                                    serverData.TestWaitingList.Add(waitItem.VersionInfo);
+                                }
+                                foreach (var compareItem in CompareWaitList)
+                                {
+                                    serverData.CompareWaitingList.Add(compareItem.VersionInfo);
+                                }
+                                SendToAllClients(serverData);
                                 if (!CallTest(data))
                                 {
-                                    LogMessage("CallTest failed " + data.VersionInfo);
-                                    //todo: clear current test file
+                                    message = "CallTest failed " + data.VersionInfo;
+                                    LogMessage(message);
+                                    serverData.Message = message;
+                                    SendToAllClients(serverData);
                                     TabItemViewModel productTab = GetTabModelByProduct(data.ProductType);
                                     if (productTab != null)
                                     {
@@ -410,7 +417,6 @@ namespace TestServer
                                 {
                                     if (data.OperateType == OperateType.Performance)
                                     {
-                                                                                
                                         TabItemViewModel productTab = GetTabModelByProduct(data.ProductType);
                                         if (productTab != null)
                                         {
@@ -425,23 +431,31 @@ namespace TestServer
                                             }
                                         }
                                     }
-                                   
-                                    if (data.StandardVersion != string.Empty)
+
+                                    if (data.StandardVersion != null && data.StandardVersion != string.Empty)
                                     {
                                         data.OperateType = OperateType.Compare;
                                         lock (_compareWaitListLock)
                                         {
                                             App.Current.Dispatcher.Invoke((Action)delegate
                                             {
+                                                data.TestVersion = data.VersionInfo;
                                                 CompareWaitList.Add(data);
                                             });
                                         }
                                     }
+                                    else
+                                    {
+                                        serverData.FinishedVersionInfo = data.VersionInfo;
+                                    }
                                 }
-                                LogMessage("Test " + data.VersionInfo + " finished");
+                                message = "Test " + data.VersionInfo + " finished";
+                                LogMessage(message);
+                                serverData.Message = message;
+                                SendToAllClients(serverData);
                                 CallCompare();
                                 //CallGetPicture();
-                                
+
                             }
                             else
                             {
@@ -453,6 +467,10 @@ namespace TestServer
                             LogMessage("DownLoadDllFromFtp fail " + data.VersionInfo);
                         }
                     }
+                }
+                else if (CompareWaitList.Count > 0)
+                {
+                    CallCompare();
                 }
             }
            
@@ -518,33 +536,48 @@ namespace TestServer
                 FileSystemWatcher watcher = new FileSystemWatcher();
                 watcher.Path = ConclusionPath;
                 watcher.Created += ConclusionFolderCreated;
+                string message = string.Empty;
+                ServerData serverData = new ServerData();
                 foreach (var data in CompareWaitList)
                 {
-                    if (data.StandardVersion == string.Empty)
-                        continue;
-                    string stdPath = ResultPath + "/" + data.StandardVersion;
-                    string cmpPath = ResultPath + "/" + data.TestVersion;
-                    string args = ConclusionPath + "/" + " " + stdPath + " " + cmpPath;
-                    ProcessStartInfo processStartInfo = new ProcessStartInfo();
-                    processStartInfo.UseShellExecute = false;
-                    processStartInfo.WorkingDirectory = _currentLocalPath;
-                    processStartInfo.Arguments = args;
-                    processStartInfo.FileName = _currentLocalPath + "/" + "CSVConclusion.exe";
-                    Process compareProcess = Process.Start(processStartInfo);
-                    if (compareProcess == null)
-                        continue;
-                    LogMessage("Start compare " + data.TestVersion);
-                    int exitCode = WaitProcess(compareProcess);
-                    LogMessage("Compare finished");
-                    if (exitCode == 0)
+                    serverData.CompareWaitingList.Add(data.VersionInfo);
+                }
+                foreach (var data in CompareWaitList)
+                {
+                    serverData.CompareWaitingList.RemoveAt(0);
+                    message = "Start compare " + data.TestVersion;
+                    LogMessage(message);
+                    serverData.Message = message;
+                    serverData.ProductType = data.ProductType.ToString();
+                    SendToAllClients(serverData);
+                    if (data.StandardVersion != string.Empty)
                     {
-                        CallGetPicture(data);
+                        string stdPath = ResultPath + "\\" + data.StandardVersion;
+                        string cmpPath = ResultPath + "\\" + data.TestVersion;
+                        string args = ConclusionPath + "/" + " " + stdPath + " " + cmpPath;
+                        ProcessStartInfo processStartInfo = new ProcessStartInfo();
+                        processStartInfo.UseShellExecute = false;
+                        processStartInfo.WorkingDirectory = _currentLocalPath;
+                        processStartInfo.Arguments = args;
+                        processStartInfo.FileName = _currentLocalPath + "\\" + "CSVConclusion.exe";
+                        Process compareProcess = Process.Start(processStartInfo);
+                        if (compareProcess == null)
+                            continue;
+                        int exitCode = WaitProcess(compareProcess);
+
+                        if (exitCode == 0)
+                        {
+                            CallGetPicture(data);
+                        }
+                        else
+                        {
+                            continue;
+                        }
                     }
-                    else
-                    {
-                        continue;
-                    }
-                    //to compare
+                    message = "Compare " + data.TestVersion + " finished";
+                    LogMessage(message);
+                    serverData.Message = message;
+                    SendToAllClients(serverData);
                 }
                 App.Current.Dispatcher.Invoke((Action)delegate
                {
@@ -613,6 +646,7 @@ namespace TestServer
             else
             {
                 serverData = new ServerData();
+                serverData.ProductType = item.Header;
                 _keyToData.Add(key, serverData);
             }           
             switch (e.PropertyName)
@@ -645,20 +679,30 @@ namespace TestServer
                     break;
             }
       
-            string message = GenerateMessage();
-            byte[] data = System.Text.Encoding.ASCII.GetBytes(message);
+            //string message = GenerateMessage();
+            //byte[] data = System.Text.Encoding.ASCII.GetBytes(message);
+            SendToAllClients(serverData);
+        }
+        private void SendToAllClients(ServerData serverData)
+        {           
+            string jsonString = JsonSerializer.Serialize(serverData);
+            byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
             SendToAllClients(data);
         }
         private void SendToAllClients(byte[] data)
         {
             _listener.SendToAllClients(data);
         }
-        private string GenerateMessage()
+        private List<ServerData> GenerateServerDataList()
         {
+            List<ServerData> serverDataList = new List<ServerData>();
             if (_keyToData.Count == 0)
-                return string.Empty;
-            string jsonString = JsonSerializer.Serialize(_keyToData);
-            return jsonString;
+                return serverDataList;
+            foreach (var keyPair in _keyToData)
+            {
+                serverDataList.Add(keyPair.Value);
+            }
+            return serverDataList;
             
         }
         private void UpdateTestListCallback(List<ClientData> dataList)
@@ -683,17 +727,15 @@ namespace TestServer
                 return;
             lock (_compareWaitListLock)
             {
-                foreach (var data in dataList)
+                App.Current.Dispatcher.Invoke((Action)delegate
                 {
-                    CompareWaitList.Add(data);
-                }
+                    foreach (var data in dataList)
+                    {
+                        CompareWaitList.Add(data);
+                    }
+                });          
             }
-        }
-        private void LogMessage(string message)
-        {
-            string logInfo = ConsoleMessage + "\n" + message + "\n";
-            ConsoleMessage = logInfo;
-        }
+        }       
         private bool DownLoadDllFromFtp(ClientData data)
         {
             _currentLocalPath = DllPath + "/" + data.VersionInfo;       
