@@ -195,7 +195,8 @@ namespace TestClient
                 }
             }
         }
-        
+        private string _extraSuffix = string.Empty;
+        public string ExtraSuffix { get; set; }
         private void OnX86PathButtonClick(object obj)
         {
             string path = OnPathButtonClicked();

@@ -8,7 +8,15 @@ namespace TestServer
 {
     class AutoTestJson
     {
-        
+        public string localWorkingPath { get; set; } = string.Empty;
+        public bool GetNewVersionOrNot { get; set; } = false;
+        public bool DebugOrNot { get; set; } = false;
+        public string runnerName { get; set; } = string.Empty;
+        public string testType { get; set; } = string.Empty;
+        public int TimeOutMin { get; set; } = 10;
+        public string DebugCrashPath { get; set; } = string.Empty;
+        public string DebugTimeoutPath { get; set; } = string.Empty;
+        public string MemorySharePath { get; set; } = string.Empty;
     }
 
     class AlgorithmTestJson

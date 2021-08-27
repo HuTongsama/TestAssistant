@@ -375,12 +375,14 @@ namespace TestServer
                         if (DownLoadDllFromFtp(data))
                         {
                             CopyContentToLocalPath(data);
+
                             AlgorithmTestJson algorithmTestJson = TransClientToJson(data);
                             JsonSerializerOptions options = new JsonSerializerOptions();
                             options.WriteIndented = true;
-                            options.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
                             string jsonString = JsonSerializer.Serialize(algorithmTestJson, options);
                             System.IO.File.WriteAllText(_currentLocalPath + "/config.json", jsonString);
+
+                          
                             ServerData serverData = new ServerData();
                             string message = string.Empty;
                             serverData.ProductType = data.ProductType.ToString();
@@ -481,38 +483,54 @@ namespace TestServer
         }
         private bool CallTest(ClientData data)
         {
-            string args = string.Empty;
+
+            AutoTestJson autoTestJson = new AutoTestJson();
+            string autoTestJsonPath = _currentLocalPath + "/AutoTestConfig.json";
+            if (System.IO.File.Exists(autoTestJsonPath))
+            {
+                byte[] jsonData = System.IO.File.ReadAllBytes(autoTestJsonPath);
+                autoTestJson = JsonSerializer.Deserialize<AutoTestJson>(jsonData);
+            }
+
+            string args = "-m ";
             switch (data.OperateType)
             {
                 case OperateType.Performance:
-                    args += "-p ";
+                    autoTestJson.testType = "-p";
                     break;
                 case OperateType.Stability:
-                    args += "-s ";
+                    autoTestJson.testType = "-s";
                     break;
                 case OperateType.Compare:
                 default:
                     return false;
             }
-            args += data.VersionInfo + "_" + DateTime.Now.ToString("HHmmss");            
+            string autoTestPath = _currentLocalPath.Substring(0, _currentLocalPath.LastIndexOf("/"));
+            args += data.VersionInfo;            
             ProcessStartInfo processStartInfo = new ProcessStartInfo();
             processStartInfo.UseShellExecute = false;
-            processStartInfo.WorkingDirectory = _currentLocalPath;
+            processStartInfo.WorkingDirectory = autoTestPath;
             processStartInfo.Arguments = args;
+            processStartInfo.FileName = autoTestPath + "/" + "AutoTest.exe";
             switch (data.ProductType)
             {
                 case ProductType.DBR:
-                    processStartInfo.FileName = _currentLocalPath + "/" + "DBRAutoTest.exe";
+                    autoTestJson.runnerName = "DBRAutoTest.exe";
                     break;
                 case ProductType.DLR:
-                    processStartInfo.FileName = _currentLocalPath + "/" + "DLRAutoTest.exe";
+                    autoTestJson.runnerName = "DLRAutoTest.exe";
                     break;
                 case ProductType.DCN:
-                    processStartInfo.FileName = _currentLocalPath + "/" + "DCNAutoTest.exe";
+                    autoTestJson.runnerName = "DCNAutoTest.exe";
                     break;
                 default:
                     return false;
             }
+            JsonSerializerOptions options = new JsonSerializerOptions();
+            options.WriteIndented = true;
+            string autoTestConfig = JsonSerializer.Serialize(autoTestJson,options);
+            autoTestJsonPath = autoTestPath + "/AutoTestConfig.json";
+            System.IO.File.WriteAllText(autoTestJsonPath, autoTestConfig);        
             try
             {
                 Process testProcess = Process.Start(processStartInfo);
@@ -621,6 +639,7 @@ namespace TestServer
                 { 
                     ftpHelper.UploadDirectory(dirInfo, path); 
                 }
+                else
                 {
                     LogMessage("Ftp path error :" + path);
                 }

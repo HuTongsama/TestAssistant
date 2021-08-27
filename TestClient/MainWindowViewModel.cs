@@ -286,6 +286,8 @@ namespace TestClient
             data.UserName = Environment.UserName;
             data.UploadTime = DateTime.Now;
             data.VersionInfo = "_v_" + data.UploadTime.ToString("yyMMdd_HHmmss") + "_" + data.UserName;
+            if (SelectedItem.ExtraSuffix != null && SelectedItem.ExtraSuffix != string.Empty)
+                data.VersionInfo += "_" + SelectedItem.ExtraSuffix;
             return data;
         }
         private void SendClientData()
