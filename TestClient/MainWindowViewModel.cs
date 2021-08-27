@@ -123,7 +123,7 @@ namespace TestClient
         }
 
         private void UpdateTabCollection(List<string> srcList, ObservableCollection<ListItem> listItems,
-            SameListItem sameListItem,Action<string> saveConfig = null)
+            SameListItem sameListItem, Action<string> saveConfig = null)
         {
             App.Current.Dispatcher.Invoke((Action)delegate
             {
@@ -159,11 +159,11 @@ namespace TestClient
                         if (_tabItems.ContainsKey(serverData.ProductType))
                         {
                             TabItemViewModel curTab = _tabItems[serverData.ProductType];                          
-                            if (serverData.PictureSetList.Count > 0)
+                            if (serverData.PictureSetChanged)
                             {
                                 UpdateTabCollection(serverData.PictureSetList, curTab.PictureSetList, sameListItem);
                             }
-                            if (serverData.TemplateList.Count > 0)
+                            if (serverData.TemplateSetChanged)
                             {
                                 UpdateTabCollection(serverData.TemplateList, curTab.TemplateSetList,
                                    sameListItem,
@@ -191,7 +191,7 @@ namespace TestClient
                                 }
                                 curTab.KeyToPicSet = tmpKeyToPicSet;
                             }
-                            if (serverData.StdVersionList.Count > 0)
+                            if (serverData.StdVersionListChanged)
                             {
                                 UpdateTabCollection(serverData.StdVersionList, curTab.StandardVersionList, sameListItem);
                             }                          
@@ -205,12 +205,22 @@ namespace TestClient
                                     });
                             }
                         }
-                        if (serverData.TestWaitingList.Count > 0)
+                        if (serverData.TestListChanged)
                         {
+                            App.Current.Dispatcher.Invoke((Action)
+                                    delegate
+                                    {
+                                        ServerTestList.Clear();
+                                    });                          
                             UpdateTabCollection(serverData.TestWaitingList, ServerTestList, sameListItem);
                         }
-                        if (serverData.CompareWaitingList.Count > 0)
+                        if (serverData.CompareListChanged)
                         {
+                            App.Current.Dispatcher.Invoke((Action)
+                                delegate
+                                {
+                                    ServerCompareList.Clear();
+                                });                         
                             UpdateTabCollection(serverData.CompareWaitingList, ServerCompareList, sameListItem);
                         }
                         if (serverData.Message != string.Empty)

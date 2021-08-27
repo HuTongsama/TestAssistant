@@ -26,14 +26,16 @@ namespace TestServer
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(PictureSetPath);
                         watcher.EnableRaisingEvents = true;
-                        watcher.Created += PictureSetContentCreated;
+                        watcher.Created += PictureSetContentChanged;
+                        watcher.Deleted += PictureSetContentChanged;
                         _pathToWatcher[PictureSetPath] = watcher;
                     }
                     else
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(PictureSetPath);
                         watcher.EnableRaisingEvents = true;
-                        watcher.Created += PictureSetContentCreated;
+                        watcher.Created += PictureSetContentChanged;
+                        watcher.Deleted += PictureSetContentChanged;
                         _pathToWatcher.Add(PictureSetPath, watcher);
                     }
                     NotifyPropertyChanged("PictureSetPath");
@@ -54,14 +56,16 @@ namespace TestServer
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(TemplatePath);
                         watcher.EnableRaisingEvents = true;
-                        watcher.Created += TemplateSetContentCreated;
+                        watcher.Created += TemplateSetContentChanged;
+                        watcher.Deleted += TemplateSetContentChanged;
                         _pathToWatcher[TemplatePath] = watcher;
                     }
                     else
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(TemplatePath);
                         watcher.EnableRaisingEvents = true;
-                        watcher.Created += TemplateSetContentCreated;
+                        watcher.Created += TemplateSetContentChanged;
+                        watcher.Deleted += TemplateSetContentChanged;
                         _pathToWatcher.Add(TemplatePath, watcher);
                     }
                     NotifyPropertyChanged("TemplatePath");
@@ -110,13 +114,15 @@ namespace TestServer
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(StdVersionPath);
                         watcher.EnableRaisingEvents = true;
-                        watcher.Created += StdVersionContentCreated;
+                        watcher.Created += StdVersionContentChanged;
+                        watcher.Deleted += StdVersionContentChanged;
                         _pathToWatcher[StdVersionPath] = watcher;
                     }
                     else
                     {
                         FileSystemWatcher watcher = new FileSystemWatcher(StdVersionPath);
-                        watcher.Created += StdVersionContentCreated;
+                        watcher.Created += StdVersionContentChanged;
+                        watcher.Deleted += StdVersionContentChanged;
                         watcher.EnableRaisingEvents = true;                      
                         _pathToWatcher.Add(StdVersionPath, watcher);
                     }
@@ -260,55 +266,51 @@ namespace TestServer
             X64ProgramPath = x64ProgramPath;
             StdVersionPath = stdVersionPath;
         }
-        private void PictureSetContentCreated(object obj, FileSystemEventArgs e)
+        private void PictureSetContentChanged(object obj, FileSystemEventArgs e)
         {
             ServerData serverData = new ServerData();
             DirectoryInfo dirInfo = new DirectoryInfo(PictureSetPath);
             var allCsvs = dirInfo.GetFiles("*.csv");
+            serverData.PictureSetChanged = true;
+            serverData.ProductType = Header;
             foreach (var csv in allCsvs)
             {
                 serverData.PictureSetList.Add(csv.Name);
             }
-            Dictionary<string, ServerData> keyValues = new Dictionary<string, ServerData>()
-            {
-                { Header,serverData}
-            };
-            string jsonString = JsonSerializer.Serialize(keyValues);
+           
+            string jsonString = JsonSerializer.Serialize(serverData);
             byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
             SendDataCallback(data);
 
         }
-        private void TemplateSetContentCreated(object obj, FileSystemEventArgs e)
+        private void TemplateSetContentChanged(object obj, FileSystemEventArgs e)
         {
             ServerData serverData = new ServerData();
-            DirectoryInfo dirInfo = new DirectoryInfo(PictureSetPath);
+            DirectoryInfo dirInfo = new DirectoryInfo(TemplatePath);
             var allJsons = dirInfo.GetFiles("*.json");
+            serverData.TemplateSetChanged = true;
+            serverData.ProductType = Header;
             foreach (var template in allJsons)
             {
                 serverData.TemplateList.Add(template.Name);
             }
-            Dictionary<string, ServerData> keyValues = new Dictionary<string, ServerData>()
-            {
-                { Header,serverData}
-            };
-            string jsonString = JsonSerializer.Serialize(keyValues);
+            string jsonString = JsonSerializer.Serialize(serverData);
             byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
             SendDataCallback(data);
         }
-        private void StdVersionContentCreated(object obj, FileSystemEventArgs e)
+        private void StdVersionContentChanged(object obj, FileSystemEventArgs e)
         {
             ServerData serverData = new ServerData();
-            DirectoryInfo dirInfo = new DirectoryInfo(PictureSetPath);
+            DirectoryInfo dirInfo = new DirectoryInfo(StdVersionPath);
             var allDirs = dirInfo.GetDirectories();
+            serverData.StdVersionListChanged = true;
+            serverData.ProductType = Header;
             foreach (var dir in allDirs)
             {
                 serverData.StdVersionList.Add(dir.Name);
             }
-            Dictionary<string, ServerData> keyValues = new Dictionary<string, ServerData>()
-            {
-                { Header,serverData}
-            };
-            string jsonString = JsonSerializer.Serialize(keyValues);
+            
+            string jsonString = JsonSerializer.Serialize(serverData);
             byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
             SendDataCallback(data);
         }

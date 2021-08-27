@@ -130,16 +130,17 @@ namespace FTP
             var files = localDirectory.GetFiles();
             var directories = localDirectory.GetDirectories();
 
-            if (MakeDirectory(dstPath))
+            string ftpPath = dstPath + "/" + localDirectory.Name;
+            if (MakeDirectory(ftpPath))
             {
                 foreach (var file in files)
                 {
-                    Upload(file, dstPath);
+                    Upload(file, ftpPath);
                 }
             }
             foreach (var dir in directories)
             {
-                UploadDirectory(dir, dstPath + "/" + dir.Name);
+                UploadDirectory(dir, ftpPath);
             }
         }
 

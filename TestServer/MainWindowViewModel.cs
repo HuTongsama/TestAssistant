@@ -333,17 +333,20 @@ namespace TestServer
                 {
                     List<string> fileNames = CommonFuction.GetAllFiles(tabItem.PictureSetPath, "*.csv");
                     serverData.PictureSetList = fileNames;
+                    serverData.PictureSetChanged = true;
                 }
                 if (tabItem.TemplatePath != string.Empty)
                 {
                     List<string> fileNames = CommonFuction.GetAllFiles(tabItem.TemplatePath, "*.json");
                     serverData.TemplateList = fileNames;
+                    serverData.TemplateSetChanged = true;
                 }
                 if (tabItem.StdVersionPath != string.Empty)
                 {
                     DirectoryInfo dirInfo = new DirectoryInfo(tabItem.StdVersionPath);
                     var subDirs = dirInfo.GetDirectories();
                     List<string> dirNames = new List<string>();
+                    serverData.StdVersionListChanged = true;
                     foreach (var dir in subDirs)
                     {
                         dirNames.Add(dir.Name);
@@ -386,10 +389,12 @@ namespace TestServer
                                 message = "Start test " + data.VersionInfo;
                                 LogMessage(message);
                                 serverData.Message = message;
+                                serverData.TestListChanged = true;
                                 foreach (var waitItem in TestWaitList)
                                 {
-                                    serverData.TestWaitingList.Add(waitItem.VersionInfo);
+                                    serverData.TestWaitingList.Add(waitItem.VersionInfo);                                  
                                 }
+                                serverData.CompareListChanged = true;
                                 foreach (var compareItem in CompareWaitList)
                                 {
                                     serverData.CompareWaitingList.Add(compareItem.VersionInfo);
@@ -444,10 +449,9 @@ namespace TestServer
                                             });
                                         }
                                     }
-                                    else
-                                    {
-                                        serverData.FinishedVersionInfo = data.VersionInfo;
-                                    }
+
+                                    serverData.FinishedVersionInfo = data.VersionInfo;
+                                    
                                 }
                                 message = "Test " + data.VersionInfo + " finished";
                                 LogMessage(message);
@@ -536,6 +540,7 @@ namespace TestServer
                 FileSystemWatcher watcher = new FileSystemWatcher();
                 watcher.Path = ConclusionPath;
                 watcher.Created += ConclusionFolderCreated;
+                watcher.EnableRaisingEvents = true;
                 string message = string.Empty;
                 ServerData serverData = new ServerData();
                 foreach (var data in CompareWaitList)
@@ -545,6 +550,7 @@ namespace TestServer
                 foreach (var data in CompareWaitList)
                 {
                     serverData.CompareWaitingList.RemoveAt(0);
+                    serverData.CompareListChanged = true;
                     message = "Start compare " + data.TestVersion;
                     LogMessage(message);
                     serverData.Message = message;
@@ -608,10 +614,16 @@ namespace TestServer
             int exitCode = WaitProcess(compareProcess);
             if (exitCode == 0)
             {
-                string path = "Testing/" + data.UserName;
+                string path = "Users/hutong/" + data.UserName;
                 FTPHelper ftpHelper = new FTPHelper();
                 DirectoryInfo dirInfo = new DirectoryInfo(_newFolderNameInConclusion);
-                ftpHelper.UploadDirectory(dirInfo, path);
+                if (ftpHelper.MakeDirectory(path))
+                { 
+                    ftpHelper.UploadDirectory(dirInfo, path); 
+                }
+                {
+                    LogMessage("Ftp path error :" + path);
+                }
             }
             return;
         }
@@ -655,12 +667,14 @@ namespace TestServer
                     {
                         List<string> fileNames = CommonFuction.GetAllFiles(item.PictureSetPath, "*.csv");
                         serverData.PictureSetList = fileNames;
+                        serverData.PictureSetChanged = true;
                     }
                     break;
                 case "TemplatePath":
                     {
                         List<string> fileNames = CommonFuction.GetAllFiles(item.TemplatePath, "*.json");
                         serverData.TemplateList = fileNames;
+                        serverData.TemplateSetChanged = true;
                     }
                     break;
                 case "StdVersionPath":
@@ -673,6 +687,7 @@ namespace TestServer
                             dirNames.Add(dir.Name);
                         }
                         serverData.StdVersionList = dirNames;
+                        serverData.StdVersionListChanged = true;
                     }
                     break;
                 default:
@@ -798,17 +813,12 @@ namespace TestServer
             };
             foreach (var templateToCsv in data.TemplateToCsvSet)
             {
-                algorithmTestJson.Template.Add(new Dictionary<string, Dictionary<string, List<string>>>
-                    ()
-                {
-                    { 
-                        templateToCsv.Key,
-                        new Dictionary<string, List<string>>()
-                        {
-                            { templateName,templateToCsv.Value }
-                        }
-                    }
-                });
+                algorithmTestJson.Template.Add(
+                    templateToCsv.Key,                      
+                    new Dictionary<string, List<string>>()
+                    {
+                        { templateName,templateToCsv.Value }
+                    });
             }
             algorithmTestJson.ImageCsvSet = data.ImageCsvList;
             return algorithmTestJson;
