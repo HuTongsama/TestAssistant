@@ -751,6 +751,13 @@ namespace TestServer
                     {
                         TestWaitList.Add(data);
                     }
+                    ServerData serverData = new ServerData();
+                    foreach (var clientData in TestWaitList)
+                    {
+                        serverData.TestWaitingList.Add(clientData.VersionInfo);
+                    }
+                    serverData.TestListChanged = true;
+                    SendToAllClients(serverData);
                 });
                 
             }
@@ -767,6 +774,13 @@ namespace TestServer
                     {
                         CompareWaitList.Add(data);
                     }
+                    ServerData serverData = new ServerData();
+                    foreach (var clientData in CompareWaitList)
+                    {
+                        serverData.CompareWaitingList.Add(clientData.VersionInfo);
+                    }
+                    serverData.CompareListChanged = true;
+                    SendToAllClients(serverData);
                 });          
             }
         }       

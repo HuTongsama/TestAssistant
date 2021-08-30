@@ -83,8 +83,8 @@ namespace TestClient
                 return _compareButtonCommand;
             }
         }
-        public ObservableCollection<ListItem> ServerTestList = new ObservableCollection<ListItem>();
-        public ObservableCollection<ListItem> ServerCompareList = new ObservableCollection<ListItem>();
+        public ObservableCollection<ListItem> ServerTestList { get; set; } = new ObservableCollection<ListItem>();
+        public ObservableCollection<ListItem> ServerCompareList { get; set; } = new ObservableCollection<ListItem>();
         public MainWindowViewModel()
         {
             Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
@@ -152,10 +152,9 @@ namespace TestClient
                 try
                 {
                     var serverData = JsonSerializer.Deserialize<ServerData>(receiveData);
-
+                    SameListItem sameListItem = new SameListItem();
                     if (serverData.ProductType != string.Empty)
-                    {
-                        SameListItem sameListItem = new SameListItem();
+                    {                     
                         if (_tabItems.ContainsKey(serverData.ProductType))
                         {
                             TabItemViewModel curTab = _tabItems[serverData.ProductType];                          
@@ -204,29 +203,29 @@ namespace TestClient
                                         curTab.TestVersionList.Add(listItem);
                                     });
                             }
-                        }
-                        if (serverData.TestListChanged)
-                        {
-                            App.Current.Dispatcher.Invoke((Action)
-                                    delegate
-                                    {
-                                        ServerTestList.Clear();
-                                    });                          
-                            UpdateTabCollection(serverData.TestWaitingList, ServerTestList, sameListItem);
-                        }
-                        if (serverData.CompareListChanged)
-                        {
-                            App.Current.Dispatcher.Invoke((Action)
+                        }                      
+                    }
+                    if (serverData.TestListChanged)
+                    {
+                        App.Current.Dispatcher.Invoke((Action)
                                 delegate
                                 {
-                                    ServerCompareList.Clear();
-                                });                         
-                            UpdateTabCollection(serverData.CompareWaitingList, ServerCompareList, sameListItem);
-                        }
-                        if (serverData.Message != string.Empty)
-                        {
-                            LogMessage(serverData.Message);
-                        }
+                                    ServerTestList.Clear();
+                                });
+                        UpdateTabCollection(serverData.TestWaitingList, ServerTestList, sameListItem);
+                    }
+                    if (serverData.CompareListChanged)
+                    {
+                        App.Current.Dispatcher.Invoke((Action)
+                            delegate
+                            {
+                                ServerCompareList.Clear();
+                            });
+                        UpdateTabCollection(serverData.CompareWaitingList, ServerCompareList, sameListItem);
+                    }
+                    if (serverData.Message != string.Empty)
+                    {
+                        LogMessage(serverData.Message);
                     }
                 }
                 catch (Exception)
@@ -343,7 +342,7 @@ namespace TestClient
                     isValid = false;
                     errMessage += "invalid DefaultTemplate\n";
                 }
-                if (data.TestDataType == null || data.TestDataType == TestDataType.Empty)
+                if (data.TestDataType == TestDataType.Empty)
                 {
                     isValid = false;
                     errMessage += "invalid TestDataType\n";

@@ -286,7 +286,9 @@ namespace TestClient
             SelectedPicList.CollectionChanged += SelectedSetListChanged;
             TemplateSetList.CollectionChanged += TemplateSetListChanged;
             DecodeTypeList.CollectionChanged += DecodeTypeListChanged;
-            
+            TestVersionList.CollectionChanged += VersionListChanged;
+            StandardVersionList.CollectionChanged += VersionListChanged;
+
             X86Path = x86Path;
             X64Path = x64Path;
             //ListItem item = new ListItem("123");
@@ -403,6 +405,17 @@ namespace TestClient
             ReadConfig(GetConfigKey(Header, "DefaultTemplate"), e, out selectedItem);
             if (selectedItem != null)
                 SelectedDefaultTemplate = selectedItem;
+        }
+        private void VersionListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null && e.NewItems.Count > 0)
+            {
+                foreach (var item in e.NewItems)
+                {
+                    ListItem listItem = item as ListItem;
+                    listItem.UseCustomerLeftClick = true;
+                }
+            }
         }
         private void DecodeTypeListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {

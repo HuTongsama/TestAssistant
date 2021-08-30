@@ -9,6 +9,7 @@ namespace TestServer
     class AutoTestJson
     {
         public string localWorkingPath { get; set; } = string.Empty;
+        public string csvHome { get; set; } = string.Empty;
         public bool GetNewVersionOrNot { get; set; } = false;
         public bool DebugOrNot { get; set; } = false;
         public string runnerName { get; set; } = string.Empty;
