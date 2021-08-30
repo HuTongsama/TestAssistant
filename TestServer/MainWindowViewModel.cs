@@ -413,7 +413,7 @@ namespace TestServer
                                     {
                                         string csvPath = productTab.PictureSetPath;
                                         DirectoryInfo dirInfo = new DirectoryInfo(csvPath);
-                                        FileInfo[] fileList = dirInfo.GetFiles("_.csv");
+                                        FileInfo[] fileList = dirInfo.GetFiles("*_.csv");
                                         foreach (var file in fileList)
                                         {
                                             File.Delete(file.FullName);
@@ -652,7 +652,7 @@ namespace TestServer
             {
                 if (_endCurrentProcess)
                 {
-                    process.Kill();
+                    KillProcessAndChildren(process.Id);
                     process.WaitForExit();
                 }
                 if (process.HasExited)
