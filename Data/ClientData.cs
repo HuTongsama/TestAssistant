@@ -39,7 +39,8 @@ namespace Data
         public string FtpCachePath { get; set; } = string.Empty;
         public List<string> ImageCsvList { get; set; } = new List<string>();
         public Dictionary<string, List<string>> TemplateToCsvSet { get; set; } = new Dictionary<string, List<string>>();
-
+        public string ServerConfig { get; set; } = string.Empty;
+        public bool UseServerConfig { get; set; } = false;
         public int CompareTo(ClientData other)
         {
             return UploadTime.CompareTo(other.UploadTime);

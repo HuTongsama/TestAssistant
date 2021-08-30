@@ -21,7 +21,16 @@ namespace Data
         public bool TestListChanged { get; set; } = false;
         public List<string> CompareWaitingList { get; set; } = new List<string>();
         public bool CompareListChanged { get; set; } = false;
+        public List<string> ConfigList { get; set; } = new List<string>();
+        public bool ConfigListChanged { get; set; } = false;
         public Dictionary<string, List<string>> KeyToPictureSet { get; set; } = new Dictionary<string, List<string>>();
         public string FinishedVersionInfo { get; set; } = string.Empty;
+    }
+
+    public class ServerConfig
+    {
+        public string DefaultConfigPath { get; set; } = string.Empty;
+        public List<string> DefaultConfig { get; set; } = new List<string>();
+        public Dictionary<string, List<string>> TagToImageSet { get; set; } = new Dictionary<string, List<string>>();
     }
 }

@@ -289,6 +289,12 @@ namespace TestServer
         }
         private void GenerateServerData()
         {
+            Dictionary<string, ServerConfig> productDefaultConfig = new Dictionary<string, ServerConfig>();
+            if (System.IO.File.Exists("ServerConfig.json"))
+            {
+                string jsonData = System.IO.File.ReadAllText("ServerConfig.json");
+                productDefaultConfig = JsonSerializer.Deserialize<Dictionary<string, ServerConfig>>(jsonData);
+            }
             foreach (var tabItem in TabItems)
             {
                 string key = tabItem.Header;
@@ -296,39 +302,26 @@ namespace TestServer
                 serverData.ProductType = key;
                 _keyToData.Add(key, serverData);
 
-                switch (key)
+                if (Enumerable.Count(serverData.DecodeTypeList, (decodeType) => decodeType == TestDataType.File.ToString()) == 0)
                 {
-                    case "DBR":
-                        {
-                            if (!serverData.KeyToPictureSet.ContainsKey("1D"))
-                                serverData.KeyToPictureSet.Add("1D", new List<string>()
-                            {   "Gen1D.csv",
-                                "ScanDoc.OneD_Check.csv",
-                                "zxing.oned_Check.csv",
-                                "isthmusinc_Check.csv",
-                                "N95-2592x1944_Check.csv",
-                                "NonScanDoc.OneD_Check.csv",
-                                "downPic_code128.csv",
-                                "1DFrame.csv"
-                            });
-                            if (Enumerable.Count(serverData.DecodeTypeList, (decodeType) => decodeType == TestDataType.File.ToString()) == 0)
-                            {
-                                serverData.DecodeTypeList.Add(TestDataType.File.ToString());
-                            }
-                            if (Enumerable.Count(serverData.DecodeTypeList, (decodeType) => decodeType == TestDataType.Buffer.ToString()) == 0)
-                            {
-                                serverData.DecodeTypeList.Add(TestDataType.Buffer.ToString());
-                            }
-
-                        }
-                        break;
-                    case "DLR":
-                        break;
-                    case "DCN":
-                        break;
-                    default:
-                        break;
+                    serverData.DecodeTypeList.Add(TestDataType.File.ToString());
                 }
+                if (Enumerable.Count(serverData.DecodeTypeList, (decodeType) => decodeType == TestDataType.Buffer.ToString()) == 0)
+                {
+                    serverData.DecodeTypeList.Add(TestDataType.Buffer.ToString());
+                }
+                if (productDefaultConfig.ContainsKey(key))
+                {
+                    ServerConfig config = productDefaultConfig[key];
+                    tabItem.ServerConfig = config;
+                    foreach (var tagToImageSet in config.TagToImageSet)
+                    {
+                        if (!serverData.KeyToPictureSet.ContainsKey(tagToImageSet.Key))
+                        {
+                            serverData.KeyToPictureSet.Add(tagToImageSet.Key, tagToImageSet.Value);
+                        }
+                    }                 
+                }              
                 if (tabItem.PictureSetPath != string.Empty)
                 {
                     List<string> fileNames = CommonFuction.GetAllFiles(tabItem.PictureSetPath, "*.csv");
@@ -375,18 +368,37 @@ namespace TestServer
                         if (DownLoadDllFromFtp(data))
                         {
                             CopyContentToLocalPath(data);
-
-                            AlgorithmTestJson algorithmTestJson = TransClientToJson(data);
-                            JsonSerializerOptions options = new JsonSerializerOptions();
-                            options.WriteIndented = true;
-                            string jsonString = JsonSerializer.Serialize(algorithmTestJson, options);
-                            System.IO.File.WriteAllText(_currentLocalPath + "/config.json", jsonString);
-
+                            bool succeedConfig = false;
+                            if (data.UseServerConfig)
+                            {
+                                var tab = GetTabModelByProduct(data.ProductType);
+                                if (tab != null && data.ServerConfig != null) 
+                                {                                   
+                                    string configPath = tab.ServerConfig.DefaultConfigPath + "/" + data.ServerConfig;
+                                    if (System.IO.File.Exists(configPath))
+                                    {
+                                        succeedConfig = true;
+                                        System.IO.File.Copy(configPath, _conclusionPath + "/config.json");
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                AlgorithmTestJson algorithmTestJson = TransClientToJson(data);
+                                if (algorithmTestJson != null)
+                                {
+                                    succeedConfig = true;
+                                    JsonSerializerOptions options = new JsonSerializerOptions();
+                                    options.WriteIndented = true;
+                                    string jsonString = JsonSerializer.Serialize(algorithmTestJson, options);
+                                    System.IO.File.WriteAllText(_currentLocalPath + "/config.json", jsonString);
+                                }
+                            }
                           
                             ServerData serverData = new ServerData();
                             string message = string.Empty;
                             serverData.ProductType = data.ProductType.ToString();
-                            if (algorithmTestJson != null)
+                            if (succeedConfig)
                             {
                                 message = "Start test " + data.VersionInfo;
                                 LogMessage(message);

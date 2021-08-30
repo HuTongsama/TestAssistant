@@ -130,7 +130,7 @@ namespace TestServer
                 }
             }
         }
-
+        public ServerConfig ServerConfig { get; set; } = null;
         
         private void OnPicSetPathButtonClicked(object obj)
         {
