@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:i ="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:TestClient"
+        xmlns:gui ="clr-namespace:GUIBase;assembly=GUIBase"
         xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2" x:Class="TestClient.MainWindow"
         mc:Ignorable="d"
         Title="MainWindow" Height="768" Width="1024">
@@ -225,7 +226,7 @@
         <Button Content="稳定性测试" Command="{Binding StabilityButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="388,592,0,0" VerticalAlignment="Top" Width="75"/>
         <Button Content="性能测试" Command="{Binding PerformanceButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="388,506,0,0" VerticalAlignment="Top" Width="75"/>
         <Button Content="比较" Command="{Binding CompareButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="388,682,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="2.693,0.474"/>
-        <ScrollViewer HorizontalAlignment="Left" Height="195" Margin="10,506,0,0" VerticalAlignment="Top" Width="378">
+        <ScrollViewer gui:AutoScrollBehavior.AutoScroll="True" HorizontalAlignment="Left" Height="195" Margin="10,506,0,0" VerticalAlignment="Top" Width="378">
             <TextBlock Text="{Binding ViewMessage}"/>
         </ScrollViewer>
         <ListBox ItemsSource="{Binding ServerTestList}" ItemContainerStyle="{StaticResource ListItemStyle}" HorizontalAlignment="Left" Height="195" Margin="405,506,0,0" VerticalAlignment="Top" Width="189" Grid.ColumnSpan="2"/>

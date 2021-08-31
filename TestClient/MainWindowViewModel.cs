@@ -29,7 +29,7 @@ namespace TestClient
         private Client _client = new Client();
         private ClientData _clientData = null;
         private bool _needSendData = false;
-        private string _ftpCachePath = "Users/hutong/cache";
+        private string _ftpCachePath = string.Empty;
 
         private void OnPerformanceButtonClick(object obj)
         {
@@ -89,7 +89,8 @@ namespace TestClient
         {
             Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             string selectedProduct = config.AppSettings.Settings["selectedProduct"].Value;
-           
+            _ftpCachePath = "Users/" + Environment.UserName + "/cache";
+
             string productName = ProductType.DBR.ToString();
             TabItemViewModel item = new TabItemViewModel(
                 productName,
