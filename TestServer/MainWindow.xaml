@@ -121,18 +121,23 @@
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="1*"/>
                 <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
             </Grid.RowDefinitions>
-            <Label Grid.Row="0" Grid.Column="0" Content="dllPath:" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DllPath}" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-            <Button Grid.Row="0" Grid.Column="2" Command="{Binding DllPathButtonCommand}" Content="..." Margin="0,15,0,15"/>
+            <Label Grid.Row="0" Grid.Column="0" Content="dllPath:" Margin="0,5,0,5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding DllPath}" Margin="0,5,0,5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Button Grid.Row="0" Grid.Column="2" Command="{Binding DllPathButtonCommand}" Content="..." Margin="0,5,0,5"/>
 
-            <Label Grid.Row="1" Grid.Column="0" Content="resultPath:" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ResultPath}" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-            <Button Grid.Row="1" Grid.Column="2" Command="{Binding ResultPathButtonCommand}" Content="..." Margin="0,15,0,15"/>
+            <Label Grid.Row="1" Grid.Column="0" Content="resultPath:" Margin="0,5,0,5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding ResultPath}" Margin="0,5,0,5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Button Grid.Row="1" Grid.Column="2" Command="{Binding ResultPathButtonCommand}" Content="..." Margin="0,5,0,5"/>
 
-            <Label Grid.Row="2" Grid.Column="0" Content="conclusionPath:" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ConclusionPath}" Margin="0,15,0,15" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-            <Button Grid.Row="2" Grid.Column="2" Command="{Binding ConclusionPathButtonCommand}" Content="..." Margin="0,15,0,15"/>
+            <Label Grid.Row="2" Grid.Column="0" Content="conclusionPath:" Margin="0,5,0,5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ConclusionPath}" Margin="0,5,0,5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Button Grid.Row="2" Grid.Column="2" Command="{Binding ConclusionPathButtonCommand}" Content="..." Margin="0,5,0,5"/>
+
+            <Label Grid.Row="3" Grid.Column="0" Content="crashPath:" Margin="0,5,0,5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding CrashPath}" Margin="0,5,0,5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Button Grid.Row="3" Grid.Column="2" Command="{Binding CrashPathButtonCommand}" Content="..." Margin="0,5,0,5"/>
         </Grid>
     </Grid>
 </Window>

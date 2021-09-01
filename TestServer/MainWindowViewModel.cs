@@ -16,6 +16,7 @@ using System.Text.Json.Serialization;
 using System.IO;
 using FTP;
 using System.Configuration;
+using System.Collections;
 
 namespace TestServer
 {
@@ -85,7 +86,20 @@ namespace TestServer
                 }
             }
         }
-
+        private string _crashPath = string.Empty;
+        public string CrashPath
+        {
+            get => _crashPath;
+            set
+            {
+                if (value != _crashPath)
+                {
+                    _crashPath = value;
+                    SetConfigValue("crashPath", value);
+                    NotifyPropertyChanged("CrashPath");
+                }
+            }
+        }
         private string _currentLocalPath = string.Empty;
         private void OnResultPathButtonClick(object obj)
         {
@@ -149,6 +163,26 @@ namespace TestServer
                 return _dllPathButtonCommand;
             }
         }
+        private RelayCommand _crashPathButtonCommand;
+        public ICommand CrashPathButtonCommand
+        {
+            get 
+            {
+                if (_crashPathButtonCommand == null)
+                {
+                    _crashPathButtonCommand = new RelayCommand(delegate (object obj)
+                    {
+                        string path = OnPathButtonClicked();
+                        if (path != null)
+                        {
+                            CrashPath = path;
+                        }
+                    },
+                    delegate { return true; });
+                }
+                return _crashPathButtonCommand;
+            }
+        }
         private string _newFolderNameInConclusion = string.Empty;
         public MainWindowViewModel()
         {
@@ -200,6 +234,7 @@ namespace TestServer
             ResultPath = config.AppSettings.Settings["resultPath"].Value;
             ConclusionPath = config.AppSettings.Settings["conclusionPath"].Value;
             DllPath = config.AppSettings.Settings["dllPath"].Value;
+            CrashPath = config.AppSettings.Settings["crashPath"].Value;
             GenerateServerData();
 
         }
@@ -365,124 +400,147 @@ namespace TestServer
                     }
                     if (data != null)
                     {
+                        ServerData serverData = new ServerData();
+                        string message = string.Empty;
+                        serverData.TestListChanged = true;
+                        foreach (var waitItem in TestWaitList)
+                        {
+                            serverData.TestWaitingList.Add(waitItem.VersionInfo);
+                        }
+                        serverData.CompareListChanged = true;
+                        foreach (var compareItem in CompareWaitList)
+                        {
+                            serverData.CompareWaitingList.Add(compareItem.VersionInfo);
+                        }
                         if (DownLoadDllFromFtp(data))
                         {
-                            CopyContentToLocalPath(data);
-                            bool succeedConfig = false;
-                            if (data.UseServerConfig)
+                            try
                             {
-                                var tab = GetTabModelByProduct(data.ProductType);
-                                if (tab != null && data.ServerConfig != null) 
-                                {                                   
-                                    string configPath = tab.ServerConfig.DefaultConfigPath + "/" + data.ServerConfig;
-                                    if (System.IO.File.Exists(configPath))
+                                CopyContentToLocalPath(data);
+                                bool succeedConfig = false;
+                                if (data.UseServerConfig)
+                                {
+                                    var tab = GetTabModelByProduct(data.ProductType);
+                                    if (tab != null && data.ServerConfig != null)
                                     {
-                                        succeedConfig = true;
-                                        System.IO.File.Copy(configPath, _conclusionPath + "/config.json");
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                AlgorithmTestJson algorithmTestJson = TransClientToJson(data);
-                                if (algorithmTestJson != null)
-                                {
-                                    succeedConfig = true;
-                                    JsonSerializerOptions options = new JsonSerializerOptions();
-                                    options.WriteIndented = true;
-                                    string jsonString = JsonSerializer.Serialize(algorithmTestJson, options);
-                                    System.IO.File.WriteAllText(_currentLocalPath + "/config.json", jsonString);
-                                }
-                            }
-                          
-                            ServerData serverData = new ServerData();
-                            string message = string.Empty;
-                            serverData.ProductType = data.ProductType.ToString();
-                            if (succeedConfig)
-                            {
-                                message = "Start test " + data.VersionInfo;
-                                LogMessage(message);
-                                serverData.Message = message;
-                                serverData.TestListChanged = true;
-                                foreach (var waitItem in TestWaitList)
-                                {
-                                    serverData.TestWaitingList.Add(waitItem.VersionInfo);                                  
-                                }
-                                serverData.CompareListChanged = true;
-                                foreach (var compareItem in CompareWaitList)
-                                {
-                                    serverData.CompareWaitingList.Add(compareItem.VersionInfo);
-                                }
-                                SendToAllClients(serverData);
-                                if (!CallTest(data))
-                                {
-                                    message = "CallTest failed " + data.VersionInfo;
-                                    LogMessage(message);
-                                    serverData.Message = message;
-                                    SendToAllClients(serverData);
-                                    TabItemViewModel productTab = GetTabModelByProduct(data.ProductType);
-                                    if (productTab != null)
-                                    {
-                                        string csvPath = productTab.PictureSetPath;
-                                        DirectoryInfo dirInfo = new DirectoryInfo(csvPath);
-                                        FileInfo[] fileList = dirInfo.GetFiles("*_.csv");
-                                        foreach (var file in fileList)
+                                        string configPath = tab.ServerConfig.DefaultConfigPath + "/" + data.ServerConfig;
+                                        if (System.IO.File.Exists(configPath))
                                         {
-                                            File.Delete(file.FullName);
+                                            succeedConfig = true;
+                                            System.IO.File.Copy(configPath, _conclusionPath + "/config.json");
                                         }
                                     }
                                 }
                                 else
                                 {
-                                    if (data.OperateType == OperateType.Performance)
+                                    AlgorithmTestJson algorithmTestJson = TransClientToJson(data);
+                                    if (algorithmTestJson != null)
                                     {
+                                        try
+                                        {
+                                            JsonSerializerOptions options = new JsonSerializerOptions();
+                                            options.WriteIndented = true;
+                                            string jsonString = JsonSerializer.Serialize(algorithmTestJson, options);
+                                            System.IO.File.WriteAllText(_currentLocalPath + "/config.json", jsonString);
+                                            succeedConfig = true;
+                                        }
+                                        catch (Exception e)
+                                        {
+                                            MessageBox.Show(e.Message);
+                                            succeedConfig = false;
+                                        }
+                                    }
+                                }
+                             
+                                serverData.ProductType = data.ProductType.ToString();
+                                if (succeedConfig)
+                                {
+                                    message = "Start test " + data.VersionInfo;
+                                    LogMessage(message);
+                                    serverData.Message = message;                                 
+                                    SendToAllClients(serverData);
+                                    if (!CallTest(data))
+                                    {
+                                        message = "CallTest failed " + data.VersionInfo;
+                                        LogMessage(message);
+                                        serverData.Message = message;
+                                        SendToAllClients(serverData);
                                         TabItemViewModel productTab = GetTabModelByProduct(data.ProductType);
                                         if (productTab != null)
                                         {
-                                            string resultPath = ResultPath + "/" + data.VersionInfo;
-                                            Directory.CreateDirectory(resultPath);
                                             string csvPath = productTab.PictureSetPath;
                                             DirectoryInfo dirInfo = new DirectoryInfo(csvPath);
                                             FileInfo[] fileList = dirInfo.GetFiles("*_.csv");
                                             foreach (var file in fileList)
                                             {
-                                                File.Move(file.FullName, Path.Combine(resultPath, file.Name));
+                                                File.Delete(file.FullName);
                                             }
                                         }
                                     }
-
-                                    if (data.StandardVersion != null && data.StandardVersion != string.Empty)
+                                    else
                                     {
-                                        data.OperateType = OperateType.Compare;
-                                        lock (_compareWaitListLock)
+                                        if (data.OperateType == OperateType.Performance)
                                         {
-                                            App.Current.Dispatcher.Invoke((Action)delegate
+                                            TabItemViewModel productTab = GetTabModelByProduct(data.ProductType);
+                                            if (productTab != null)
                                             {
-                                                data.TestVersion = data.VersionInfo;
-                                                CompareWaitList.Add(data);
-                                            });
+                                                string resultPath = ResultPath + "/" + data.VersionInfo;
+                                                Directory.CreateDirectory(resultPath);
+                                                string csvPath = productTab.PictureSetPath;
+                                                DirectoryInfo dirInfo = new DirectoryInfo(csvPath);
+                                                FileInfo[] fileList = dirInfo.GetFiles("*_.csv");
+                                                foreach (var file in fileList)
+                                                {
+                                                    File.Move(file.FullName, Path.Combine(resultPath, file.Name));
+                                                }
+                                            }
                                         }
-                                    }
 
-                                    serverData.FinishedVersionInfo = data.VersionInfo;
-                                    
+                                        if (data.StandardVersion != null && data.StandardVersion != string.Empty)
+                                        {
+                                            data.OperateType = OperateType.Compare;
+                                            lock (_compareWaitListLock)
+                                            {
+                                                App.Current.Dispatcher.Invoke((Action)delegate
+                                                {
+                                                    data.TestVersion = data.VersionInfo;
+                                                    CompareWaitList.Add(data);
+                                                });
+                                            }
+                                        }
+
+                                        serverData.FinishedVersionInfo = data.VersionInfo;
+
+                                    }
+                                    message = "Test " + data.VersionInfo + " finished";
+                                    LogMessage(message);
+                                    serverData.Message = message;
+                                    SendToAllClients(serverData);
+                                    CallCompare();
                                 }
-                                message = "Test " + data.VersionInfo + " finished";
-                                LogMessage(message);
+                                else
+                                {
+                                    message = "error test config";
+                                    serverData.Message = message;
+                                    LogMessage(message);
+                                    SendToAllClients(serverData);                                   
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                MessageBox.Show(e.Message);
+                                message = e.Message;
                                 serverData.Message = message;
                                 SendToAllClients(serverData);
-                                CallCompare();
-                                //CallGetPicture();
-
-                            }
-                            else
-                            {
-                                MessageBox.Show("error algorithm json");
+                                continue;
                             }
                         }
                         else
                         {
-                            LogMessage("DownLoadDllFromFtp fail " + data.VersionInfo);
+                            message = "Server DownLoadDllFromFtp fail " + data.VersionInfo;
+                            serverData.Message = message;           
+                            SendToAllClients(serverData);
+                            LogMessage(message);                          
                         }
                     }
                 }
@@ -546,11 +604,47 @@ namespace TestServer
             try
             {
                 Process testProcess = Process.Start(processStartInfo);
+                string logFilePath = _currentLocalPath + "/" + "result";
+                if (System.IO.Directory.Exists(logFilePath))
+                {
+                    DirectoryInfo logDir = new DirectoryInfo(logFilePath);
+                    var errFiles = logDir.GetFiles("*error.log");
+                    Array.Sort(errFiles, delegate (FileInfo f1, FileInfo f2)
+                     {
+                         if (f1.LastWriteTime == f2.LastWriteTime)
+                             return 0;
+                         else if (f1.LastWriteTime > f2.LastWriteTime)
+                             return 1;
+                         else
+                             return -1;
+                     });
+                    if (errFiles.Length > 0)
+                    {
+                        var file = errFiles.Last();
+                        string dstPath = CrashPath + "/" + DateTime.Now.ToString("yyMMdd_HHmmss");
+                        DirectoryInfo dstDir = new DirectoryInfo(dstPath);
+                        if (!dstDir.Exists)
+                        {
+                            dstDir.Create();
+                        }
+
+                        using (StreamReader sr = file.OpenText())
+                        {
+                            var s = "";
+                            while ((s = sr.ReadLine()) != null)
+                            {
+                                FileInfo tmp = new FileInfo(s);
+                                tmp.CopyTo(dstPath + "/" + tmp.Name);
+                            }
+                        }
+                    }
+                }
                 if (testProcess == null)
                 {
                     return false;
                 }
                 int exitCode = WaitProcess(testProcess);
+
                 if (exitCode == 0)
                     return true;
                 else
@@ -644,7 +738,7 @@ namespace TestServer
             int exitCode = WaitProcess(compareProcess);
             if (exitCode == 0)
             {
-                string path = "Users/hutong/" + data.UserName;
+                string path = "Testing/" + data.UserName;
                 FTPHelper ftpHelper = new FTPHelper();
                 DirectoryInfo dirInfo = new DirectoryInfo(_newFolderNameInConclusion);
                 if (ftpHelper.MakeDirectory(path))
@@ -798,14 +892,22 @@ namespace TestServer
         }       
         private bool DownLoadDllFromFtp(ClientData data)
         {
-            _currentLocalPath = DllPath + "/" + data.VersionInfo;       
-            FTPHelper ftpHelper = new FTPHelper();
-            if (ftpHelper.Download(data.FtpCachePath, _currentLocalPath))
+            try
             {
-                return true;
+                _currentLocalPath = DllPath + "/" + data.VersionInfo;
+                FTPHelper ftpHelper = new FTPHelper();
+                if (ftpHelper.Download(data.FtpCachePath, _currentLocalPath))
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
-            else
+            catch (Exception e)
             {
+                MessageBox.Show(e.Message);
                 return false;
             }
         }
@@ -826,7 +928,9 @@ namespace TestServer
             FileInfo[] fileList = dirInfo.GetFiles("*.*");
             foreach (var file in fileList)
             {
-                File.Copy(file.FullName, Path.Combine(_currentLocalPath, file.Name));
+                string dstPath = Path.Combine(_currentLocalPath, file.Name);
+                if (!System.IO.File.Exists(dstPath))
+                    file.CopyTo(Path.Combine(_currentLocalPath, file.Name));                
             }
         }
         private AlgorithmTestJson TransClientToJson(ClientData data)

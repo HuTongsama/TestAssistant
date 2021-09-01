@@ -89,8 +89,9 @@ namespace TestClient
         {
             Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             string selectedProduct = config.AppSettings.Settings["selectedProduct"].Value;
-            _ftpCachePath = "Users/" + Environment.UserName + "/cache";
-
+            _ftpCachePath = "Testing/Cache";
+            FTPHelper ftpHelper = new FTPHelper();
+            ftpHelper.MakeDirectory(_ftpCachePath);
             string productName = ProductType.DBR.ToString();
             TabItemViewModel item = new TabItemViewModel(
                 productName,
@@ -308,29 +309,37 @@ namespace TestClient
         }
         private bool UploadDll(string ftpPath)
         {
-            List<string> dllPathList = new List<string>();
-            if (SelectedItem.X64Path != string.Empty)
-                dllPathList.Add(SelectedItem.X64Path);
-            if (SelectedItem.X86Path != string.Empty)
-                dllPathList.Add(SelectedItem.X86Path);
-            FTPHelper ftpHelper = new FTPHelper();            
-            if (ftpHelper.MakeDirectory(ftpPath))
+            try
             {
-                foreach (var path in dllPathList)
+                List<string> dllPathList = new List<string>();
+                if (SelectedItem.X64Path != string.Empty)
+                    dllPathList.Add(SelectedItem.X64Path);
+                if (SelectedItem.X86Path != string.Empty)
+                    dllPathList.Add(SelectedItem.X86Path);
+                FTPHelper ftpHelper = new FTPHelper();
+                if (ftpHelper.MakeDirectory(ftpPath))
                 {
-                    DirectoryInfo dirInfo = new DirectoryInfo(SelectedItem.X64Path);
-                    FileInfo[] files = dirInfo.GetFiles("*.dll", SearchOption.AllDirectories);
-                    foreach (var file in files)
+                    foreach (var path in dllPathList)
                     {
-                        ftpHelper.Upload(file, ftpPath);
+                        DirectoryInfo dirInfo = new DirectoryInfo(SelectedItem.X64Path);
+                        FileInfo[] files = dirInfo.GetFiles("*.dll", SearchOption.AllDirectories);
+                        foreach (var file in files)
+                        {
+                            ftpHelper.Upload(file, ftpPath);
+                        }
                     }
                 }
+                else
+                {
+                    return false;
+                }
+                return true;
             }
-            else
+            catch (Exception e)
             {
+                MessageBox.Show(e.Message);
                 return false;
             }
-            return true;
         }
         private bool DataCheck(ClientData data,out string errMessage)
         {

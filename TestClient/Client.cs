@@ -21,11 +21,10 @@ namespace TestClient
         {
             try
             {              
-                IPHostEntry ipHostInfo = Dns.GetHostEntry("127.0.0.1");
-                
-                _ipAddress = ipHostInfo.AddressList[1];
+                var addressArr = Dns.GetHostAddresses("192.168.2.81");               
+                _ipAddress = addressArr[0];
                
-               _port = 8888;
+                _port = 8888;
                 _clientSocket = new Socket(_ipAddress.AddressFamily,
                 SocketType.Stream, ProtocolType.Tcp);
             }

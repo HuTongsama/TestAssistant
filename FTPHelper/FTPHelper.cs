@@ -14,13 +14,13 @@ namespace FTP
         private string _ftpUrl = string.Empty;
         private string _userName = string.Empty;
         private string _password = string.Empty;
-        private string _ftpPath = string.Empty;
 
 
         public FTPHelper()
         {
-            _ftpUrl = "ftp://192.168.8.20";
-            _ftpPath = "Users/hutong";
+            _ftpUrl = "ftp://192.168.2.8";
+            _userName = "ftpuser";
+            _password = "Aa000000";
         }
 
         public void Upload(FileInfo localFile, string dstPath)
@@ -61,6 +61,8 @@ namespace FTP
             {
                 string path = _ftpUrl + "/" + ftpPath;
                 FtpWebRequest request = (FtpWebRequest)WebRequest.Create(path);
+                NetworkCredential networkCredential = new NetworkCredential(_userName, _password);
+                request.Credentials = networkCredential;
                 request.Method = WebRequestMethods.Ftp.ListDirectory;
                 WebResponse response = request.GetResponse();
                 using (StreamReader reader = new StreamReader(response.GetResponseStream(), System.Text.Encoding.Default))
@@ -70,6 +72,7 @@ namespace FTP
                     {
                         string ftpFilePath = path + "/" + line;
                         request = (FtpWebRequest)WebRequest.Create(ftpFilePath);
+                        request.Credentials = networkCredential;
                         request.Method = WebRequestMethods.Ftp.DownloadFile;
 
                         string localFilePath = localPath + "/" + line;
