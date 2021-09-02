@@ -90,13 +90,15 @@ namespace TestClient
             Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             string selectedProduct = config.AppSettings.Settings["selectedProduct"].Value;
             _ftpCachePath = "Testing/Cache";
-            FTPHelper ftpHelper = new FTPHelper();
-            ftpHelper.MakeDirectory(_ftpCachePath);
+            //FTPHelper ftpHelper = new FTPHelper();
+            //ftpHelper.MakeDirectory(_ftpCachePath);
             string productName = ProductType.DBR.ToString();
             TabItemViewModel item = new TabItemViewModel(
                 productName,
                 config.AppSettings.Settings["dbrX86DllPath"].Value,
-                config.AppSettings.Settings["dbrX64DllPath"].Value);        
+                config.AppSettings.Settings["dbrX64DllPath"].Value,
+                config.AppSettings.Settings["dbrUseServerConfig"].Value,
+                config.AppSettings.Settings["dbrStandardVersion"].Value);
             _tabItems.Add(productName, item);       
             SelectedItem = item;
             
@@ -104,7 +106,9 @@ namespace TestClient
             item = new TabItemViewModel(
                 productName,
                 config.AppSettings.Settings["dlrX86DllPath"].Value,
-                config.AppSettings.Settings["dlrX64DllPath"].Value);
+                config.AppSettings.Settings["dlrX64DllPath"].Value,
+                config.AppSettings.Settings["dlrUseServerConfig"].Value,
+                config.AppSettings.Settings["dlrStandardVersion"].Value);
             if (selectedProduct != string.Empty && selectedProduct == productName)
                 SelectedItem = item;
             _tabItems.Add(productName, item);
@@ -113,7 +117,9 @@ namespace TestClient
             item = new TabItemViewModel(
                 productName,
                 config.AppSettings.Settings["dcnX86DllPath"].Value,
-                config.AppSettings.Settings["dcnX64DllPath"].Value);
+                config.AppSettings.Settings["dcnX64DllPath"].Value,
+                config.AppSettings.Settings["dcnUseServerConfig"].Value,
+                config.AppSettings.Settings["dcnStandardVersion"].Value);
             if (selectedProduct != string.Empty && selectedProduct == productName)
                 SelectedItem = item;
             _tabItems.Add(productName, item);
@@ -205,6 +211,10 @@ namespace TestClient
                                         curTab.TestVersionList.Add(listItem);
                                     });
                             }
+                            if (serverData.ConfigListChanged)
+                            {
+                                UpdateTabCollection(serverData.ConfigList, curTab.ServerConfigList, sameListItem);
+                            }
                         }                      
                     }
                     if (serverData.TestListChanged)
@@ -243,23 +253,44 @@ namespace TestClient
                 return null;
             ClientData data = new ClientData();
             data.ProductType = (ProductType)Enum.Parse(typeof(ProductType), SelectedItem.Header);
-            foreach (var listItem in SelectedItem.SelectedPicList)
+            if (SelectedItem.UseServerConfig)
             {
-                data.ImageCsvList.Add(listItem.ItemName);
-            }
-            
-            foreach (var keyPair in SelectedItem.PicToTemplate)
-            {
-                string template = keyPair.Value;
-                string csv = keyPair.Key;
-                if (!data.TemplateToCsvSet.ContainsKey(template))
+                data.UseServerConfig = true;
+                foreach (var serverConfig in SelectedItem.ServerConfigList)
                 {
-                    data.TemplateToCsvSet.Add(template,new List<string>());
-                    
+                    if (serverConfig.IsSelected)
+                    {
+                        data.ServerConfig = serverConfig.ItemName;
+                        break;
+                    }
                 }
-                data.TemplateToCsvSet[template].Add(csv);
             }
+            else
+            {
+                foreach (var listItem in SelectedItem.SelectedPicList)
+                {
+                    data.ImageCsvList.Add(listItem.ItemName);
+                }
+                foreach (var template in SelectedItem.TemplateSetList)
+                {
+                    if (template.IsSelected)
+                    {
+                        data.DefaultTemplate = template.ItemName;
+                        break;
+                    }
+                }
+                foreach (var keyPair in SelectedItem.PicToTemplate)
+                {
+                    string template = keyPair.Value;
+                    string csv = keyPair.Key;
+                    if (!data.TemplateToCsvSet.ContainsKey(template))
+                    {
+                        data.TemplateToCsvSet.Add(template, new List<string>());
 
+                    }
+                    data.TemplateToCsvSet[template].Add(csv);
+                }
+            }
             foreach (var decodeType in SelectedItem.DecodeTypeList)
             {
                 if (decodeType.IsSelected)
@@ -268,14 +299,7 @@ namespace TestClient
                     break;
                 }
             }
-            foreach (var template in SelectedItem.TemplateSetList)
-            {
-                if (template.IsSelected)
-                {
-                    data.DefaultTemplate = template.ItemName;
-                    break;
-                }
-            }
+            
             if (SelectedItem.SelectedTestVersion != null)
             {
                 data.TestVersion = SelectedItem.SelectedTestVersion.ItemName;
@@ -347,15 +371,26 @@ namespace TestClient
             bool isValid = true;
             if (data.OperateType != OperateType.Compare)
             {
-                if (data.DefaultTemplate == null || data.DefaultTemplate == string.Empty)
+                if (!data.UseServerConfig)
                 {
-                    isValid = false;
-                    errMessage += "invalid DefaultTemplate\n";
+                    if (data.DefaultTemplate == null || data.DefaultTemplate == string.Empty)
+                    {
+                        isValid = false;
+                        errMessage += "invalid DefaultTemplate\n";
+                    }
+                    if (data.TestDataType == TestDataType.Empty)
+                    {
+                        isValid = false;
+                        errMessage += "invalid TestDataType\n";
+                    }
                 }
-                if (data.TestDataType == TestDataType.Empty)
+                else
                 {
-                    isValid = false;
-                    errMessage += "invalid TestDataType\n";
+                    if (data.ServerConfig == null || data.ServerConfig == string.Empty)
+                    {
+                        isValid = false;
+                        errMessage += "invalid ServerConfig\n";
+                    }
                 }
                 if (SelectedItem.X64Path == null ||
                     SelectedItem.X64Path == string.Empty

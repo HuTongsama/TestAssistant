@@ -355,7 +355,12 @@ namespace TestServer
                         {
                             serverData.KeyToPictureSet.Add(tagToImageSet.Key, tagToImageSet.Value);
                         }
-                    }                 
+                    }
+                    foreach (var serverConfig in config.DefaultConfig)
+                    {
+                        serverData.ConfigList.Add(serverConfig);
+                    }
+                    serverData.ConfigListChanged = true;
                 }              
                 if (tabItem.PictureSetPath != string.Empty)
                 {
@@ -427,7 +432,7 @@ namespace TestServer
                                         if (System.IO.File.Exists(configPath))
                                         {
                                             succeedConfig = true;
-                                            System.IO.File.Copy(configPath, _conclusionPath + "/config.json");
+                                            System.IO.File.Copy(configPath, _currentLocalPath + "/config.json");
                                         }
                                     }
                                 }
@@ -603,21 +608,26 @@ namespace TestServer
             System.IO.File.WriteAllText(autoTestJsonPath, autoTestConfig);        
             try
             {
-                Process testProcess = Process.Start(processStartInfo);
+                Process testProcess = Process.Start(processStartInfo);              
+                if (testProcess == null)
+                {
+                    return false;
+                }
+                int exitCode = WaitProcess(testProcess);
                 string logFilePath = _currentLocalPath + "/" + "result";
                 if (System.IO.Directory.Exists(logFilePath))
                 {
                     DirectoryInfo logDir = new DirectoryInfo(logFilePath);
                     var errFiles = logDir.GetFiles("*error.log");
                     Array.Sort(errFiles, delegate (FileInfo f1, FileInfo f2)
-                     {
-                         if (f1.LastWriteTime == f2.LastWriteTime)
-                             return 0;
-                         else if (f1.LastWriteTime > f2.LastWriteTime)
-                             return 1;
-                         else
-                             return -1;
-                     });
+                    {
+                        if (f1.LastWriteTime == f2.LastWriteTime)
+                            return 0;
+                        else if (f1.LastWriteTime > f2.LastWriteTime)
+                            return 1;
+                        else
+                            return -1;
+                    });
                     if (errFiles.Length > 0)
                     {
                         var file = errFiles.Last();
@@ -637,14 +647,14 @@ namespace TestServer
                                 tmp.CopyTo(dstPath + "/" + tmp.Name);
                             }
                         }
+                        FTPHelper ftpHelper = new FTPHelper();
+                        string path = "Testing/" + data.UserName;
+                        if (ftpHelper.MakeDirectory(path))
+                        {
+                            ftpHelper.UploadDirectory(dstDir, path);
+                        }                       
                     }
                 }
-                if (testProcess == null)
-                {
-                    return false;
-                }
-                int exitCode = WaitProcess(testProcess);
-
                 if (exitCode == 0)
                     return true;
                 else
@@ -673,6 +683,13 @@ namespace TestServer
                 }
                 foreach (var data in CompareWaitList)
                 {
+                    _currentLocalPath = DllPath + "/" + data.VersionInfo;
+                    if (!System.IO.Directory.Exists(_currentLocalPath))
+                    {
+                        DirectoryInfo dirInfo = new DirectoryInfo(_currentLocalPath);
+                        dirInfo.Create();
+                        CopyContentToLocalPath(data);
+                    }
                     serverData.CompareWaitingList.RemoveAt(0);
                     serverData.CompareListChanged = true;
                     message = "Start compare " + data.TestVersion;
@@ -680,10 +697,35 @@ namespace TestServer
                     serverData.Message = message;
                     serverData.ProductType = data.ProductType.ToString();
                     SendToAllClients(serverData);
-                    if (data.StandardVersion != string.Empty)
+
+                    bool compareFinished = false;
+                    string stdRootPath = ResultPath;
+                    var productTab = GetTabModelByProduct(data.ProductType);
+                    if (System.IO.Directory.Exists(productTab.StdVersionPath))
                     {
-                        string stdPath = ResultPath + "\\" + data.StandardVersion;
-                        string cmpPath = ResultPath + "\\" + data.TestVersion;
+                        DirectoryInfo dirInfo = new DirectoryInfo(productTab.StdVersionPath);
+                        var subDirList = dirInfo.GetDirectories();
+                        foreach (var subDir in subDirList)
+                        {
+                            if (subDir.Name == data.StandardVersion)
+                            {
+                                stdRootPath = productTab.StdVersionPath;
+                                break;
+                            }
+                        }
+                    }
+                    string stdPath = stdRootPath + "\\" + data.StandardVersion;
+                    string cmpPath = ResultPath + "\\" + data.TestVersion;
+                    if (!System.IO.Directory.Exists(stdPath))
+                    {
+                        message += "Version " + data.StandardVersion + "can not be found\n";
+                    }
+                    else if (!System.IO.Directory.Exists(cmpPath))
+                    {
+                        message += "Version" + data.TestVersion + "can not be found\n";
+                    }
+                    else
+                    {
                         string args = ConclusionPath + "/" + " " + stdPath + " " + cmpPath;
                         ProcessStartInfo processStartInfo = new ProcessStartInfo();
                         processStartInfo.UseShellExecute = false;
@@ -692,19 +734,29 @@ namespace TestServer
                         processStartInfo.FileName = _currentLocalPath + "\\" + "CSVConclusion.exe";
                         Process compareProcess = Process.Start(processStartInfo);
                         if (compareProcess == null)
-                            continue;
-                        int exitCode = WaitProcess(compareProcess);
-
-                        if (exitCode == 0)
                         {
-                            CallGetPicture(data);
+                            message += "Fail to start Compare";
                         }
                         else
                         {
-                            continue;
+                            int exitCode = WaitProcess(compareProcess);
+
+                            if (exitCode == 0)
+                            {
+                                CallGetPicture(data);
+                                compareFinished = true;
+                            }
+                            else
+                            {
+                                message += "Call compare failed";
+                            }
                         }
                     }
-                    message = "Compare " + data.TestVersion + " finished";
+
+                    if (compareFinished)
+                    {
+                        message = "Compare " + data.TestVersion + " finished";
+                    }
                     LogMessage(message);
                     serverData.Message = message;
                     SendToAllClients(serverData);

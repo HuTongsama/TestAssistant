@@ -63,7 +63,49 @@ namespace TestClient
                 }
             }
         }
-       
+
+        private bool _useServerConfig = false;
+        public bool UseServerConfig 
+        {
+            get => _useServerConfig;
+            set
+            {
+                if (value != _useServerConfig)
+                {
+                    _useServerConfig = value;
+                    SetConfigValue(GetConfigKey(Header, "UseServerConfig"), value.ToString());
+                    EnableContent = !value;
+                    NotifyPropertyChanged("UseServerConfig");
+                }
+            }
+        }
+        private bool _enableContent = true;
+        public bool EnableContent
+        {
+            get => _enableContent;
+            set
+            {
+                if (value != _enableContent)
+                {
+                    _enableContent = value;
+                    NotifyPropertyChanged("EnableContent");
+                }
+            }
+        }
+        public ObservableCollection<ListItem> ServerConfigList { get; set; } = new ObservableCollection<ListItem>();
+        private ListItem _selectedServerConfig = new ListItem();
+        public ListItem SelectedServerConfig
+        {
+            get => _selectedServerConfig;
+            set
+            {
+                if (value != _selectedServerConfig)
+                {
+                    _selectedServerConfig = value;
+                    NotifyPropertyChanged("SelectedServerConfig");
+                }
+            }
+        }
         public ObservableCollection<ListItem> TemplateSetList { get; set; } = new ObservableCollection<ListItem>();
         private ListItem _selectedDefaultTemplate = new ListItem();
         public ListItem SelectedDefaultTemplate
@@ -279,7 +321,8 @@ namespace TestClient
                 return _removeStandardCommand;
             }
         }
-        public TabItemViewModel(string header,string x86Path = "",string x64Path = "")
+        public TabItemViewModel(string header,string x86Path = "",string x64Path = "",
+            string useServerConfig = "",string standardVersionConfig = "")
         {
             Header = header;
             PictureSetList.CollectionChanged += PictureSetListChanged;
@@ -288,20 +331,23 @@ namespace TestClient
             DecodeTypeList.CollectionChanged += DecodeTypeListChanged;
             TestVersionList.CollectionChanged += VersionListChanged;
             StandardVersionList.CollectionChanged += VersionListChanged;
+            ServerConfigList.CollectionChanged += ServerConfigListChanged;
 
             X86Path = x86Path;
             X64Path = x64Path;
-            //ListItem item = new ListItem("123");
-            //item.UseCustomerLeftClick = true;
-            
-            //TestVersionList.Add(item);
-            //item = new ListItem("234");
-            //item.UseCustomerLeftClick = true;
-            
-            //TestVersionList.Add(item);
-            //item = new ListItem("789");
-            //item.UseCustomerLeftClick = true;
-            //StandardVersionList.Add(item);
+            if (useServerConfig != null && useServerConfig != string.Empty)            
+            {
+                UseServerConfig = bool.Parse(useServerConfig);
+            }
+            if (standardVersionConfig != null && standardVersionConfig != string.Empty)
+            {
+                var versionList = standardVersionConfig.Split(' ');
+                foreach (var version in versionList)
+                {
+                    ListItem item = new ListItem(version);
+                    StandardVersionList.Add(item);
+                }
+            }
         }
 
         private void UpdateSelectedPicList(ListItem item, bool isAdd, EqualityComparer<ListItem> comparer)
@@ -423,6 +469,22 @@ namespace TestClient
             ReadConfig(GetConfigKey(Header, "DecodeType"), e,out selectedItem);
             if (selectedItem != null)
                 SelectedDecodeType = selectedItem;
+        }
+        private void ServerConfigListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            ListItem selectedItem = null;
+            ReadConfig(GetConfigKey(Header, "ServerConfig"), e, out selectedItem);
+            if (selectedItem != null)
+                SelectedServerConfig = selectedItem;
+        }
+        private void StandardVersionListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            string config = string.Empty;
+            foreach (var stdVersion in StandardVersionList)
+            {
+                config += (stdVersion.ItemName + " ");
+            }
+            SetConfigValue(GetConfigKey(Header, "StandardVersion"), config);
         }
         private void ReadConfig(string configKey, NotifyCollectionChangedEventArgs e,out ListItem selectedItem)
         {
