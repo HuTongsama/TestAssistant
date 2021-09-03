@@ -37,6 +37,20 @@ namespace TestServer
                 return _tabItems;
             }
         }
+        private TabItemViewModel _selectedTab = null;
+        public TabItemViewModel SelectedTab
+        {
+            get => _selectedTab;
+            set
+            {
+                if (value != _selectedTab)
+                {
+                    _selectedTab = value;
+                    SetConfigValue("selectedTab", value.Header);
+                    NotifyPropertyChanged("SelectedTab");
+                }
+            }
+        }
         private Dictionary<string, ServerData> _keyToData = new Dictionary<string, ServerData>();
         public ObservableCollection<ClientData> TestWaitList { get; set; } = new ObservableCollection<ClientData>();        
         private readonly object _testWaitListLock = new object();
@@ -196,7 +210,7 @@ namespace TestServer
             _tabItems = new ObservableCollection<TabItemViewModel>();
 
             Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
-           
+            string selectedTab = config.AppSettings.Settings["selectedTab"].Value;
             string productName = ProductType.DBR.ToString();
             TabItemViewModel item = new TabItemViewModel(productName,
                 config.AppSettings.Settings["dbrPicturePath"].Value,
@@ -206,6 +220,7 @@ namespace TestServer
                 config.AppSettings.Settings["dbrStdVersionPath"].Value);                    
             item.PropertyChanged += this.TabItemPropertyChanged;
             item.SendDataCallback = SendToAllClients;
+            SelectedTab = item;
             _tabItems.Add(item);
             
                      
@@ -220,6 +235,9 @@ namespace TestServer
             item.PropertyChanged += this.TabItemPropertyChanged;
             item.SendDataCallback = SendToAllClients;
             _tabItems.Add(item);
+            if (selectedTab != string.Empty && selectedTab == productName)
+                SelectedTab = item;
+
             productName = ProductType.DCN.ToString();
             item = new TabItemViewModel(productName,
                 config.AppSettings.Settings["dcnPicturePath"].Value,
@@ -230,7 +248,9 @@ namespace TestServer
             item.PropertyChanged += this.TabItemPropertyChanged;
             item.SendDataCallback = SendToAllClients;
             _tabItems.Add(item);
-       
+            if (selectedTab != string.Empty && selectedTab == productName)
+                SelectedTab = item;
+
             ResultPath = config.AppSettings.Settings["resultPath"].Value;
             ConclusionPath = config.AppSettings.Settings["conclusionPath"].Value;
             DllPath = config.AppSettings.Settings["dllPath"].Value;
@@ -582,11 +602,10 @@ namespace TestServer
             }
             string autoTestPath = _currentLocalPath.Substring(0, _currentLocalPath.LastIndexOf("/"));
             args += data.VersionInfo;            
-            ProcessStartInfo processStartInfo = new ProcessStartInfo();
-            processStartInfo.UseShellExecute = false;
+            ProcessStartInfo processStartInfo = new ProcessStartInfo();           
             processStartInfo.WorkingDirectory = autoTestPath;
             processStartInfo.Arguments = args;
-            processStartInfo.FileName = autoTestPath + "/" + "AutoTest.exe";
+            processStartInfo.FileName = autoTestPath + "/" + "AutoTest.exe";         
             switch (data.ProductType)
             {
                 case ProductType.DBR:
@@ -608,7 +627,9 @@ namespace TestServer
             System.IO.File.WriteAllText(autoTestJsonPath, autoTestConfig);        
             try
             {
-                Process testProcess = Process.Start(processStartInfo);              
+                Process testProcess =  new Process();
+                testProcess.StartInfo = processStartInfo;
+                testProcess.Start();
                 if (testProcess == null)
                 {
                     return false;
@@ -658,7 +679,7 @@ namespace TestServer
                 if (exitCode == 0)
                     return true;
                 else
-                    return false;
+                    return false;                
             }
             catch (Exception e)
             {
@@ -732,7 +753,10 @@ namespace TestServer
                         processStartInfo.WorkingDirectory = _currentLocalPath;
                         processStartInfo.Arguments = args;
                         processStartInfo.FileName = _currentLocalPath + "\\" + "CSVConclusion.exe";
-                        Process compareProcess = Process.Start(processStartInfo);
+                        Process compareProcess = new Process();
+                        compareProcess.StartInfo = processStartInfo;
+                        compareProcess.Start();
+                        
                         if (compareProcess == null)
                         {
                             message += "Fail to start Compare";
@@ -771,8 +795,7 @@ namespace TestServer
         private void ConclusionFolderCreated(object source, FileSystemEventArgs e)
         {
             _newFolderNameInConclusion = e.FullPath;
-        }
-        
+        }      
         private void CallGetPicture(ClientData data)
         {
             if (!System.IO.Directory.Exists(_newFolderNameInConclusion))
@@ -783,11 +806,13 @@ namespace TestServer
             processStartInfo.Arguments = _newFolderNameInConclusion;
             processStartInfo.FileName = _currentLocalPath + "/" + "GetDiffPicture.exe";
             LogMessage("Start getPicture");
-            Process compareProcess = Process.Start(processStartInfo);
+            Process getPicProcess = new Process();
+            getPicProcess.StartInfo = processStartInfo;
+            getPicProcess.Start();
             LogMessage("GetPicture finished");
-            if (compareProcess == null)
+            if (getPicProcess == null)
                 return;
-            int exitCode = WaitProcess(compareProcess);
+            int exitCode = WaitProcess(getPicProcess);
             if (exitCode == 0)
             {
                 string path = "Testing/" + data.UserName;

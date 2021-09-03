@@ -25,7 +25,20 @@ namespace TestClient
         {
             get => _tabItems;
         }
-        public TabItemViewModel SelectedItem { get; set; } = null;
+        private TabItemViewModel _selectedItem = null;
+        public TabItemViewModel SelectedItem 
+        {
+            get => _selectedItem;
+            set
+            {
+                if (value != _selectedItem)
+                {
+                    _selectedItem = value;
+                    SetConfigValue("selectedProduct", value.Header);
+                    NotifyPropertyChanged("SelectedItem");
+                }
+            }
+        }
         private Client _client = new Client();
         private ClientData _clientData = null;
         private bool _needSendData = false;
@@ -131,7 +144,7 @@ namespace TestClient
         }
 
         private void UpdateTabCollection(List<string> srcList, ObservableCollection<ListItem> listItems,
-            SameListItem sameListItem, Action<string> saveConfig = null)
+            SameListItem sameListItem)
         {
             App.Current.Dispatcher.Invoke((Action)delegate
             {
@@ -140,8 +153,6 @@ namespace TestClient
                     ListItem item = new ListItem(picSet);
                     if (Enumerable.Contains(listItems, item, sameListItem))
                         continue;
-                    if (saveConfig != null)
-                        item.SaveConfig = saveConfig;
                     listItems.Add(item);
                 }
             });
@@ -154,7 +165,10 @@ namespace TestClient
                 if (_client == null)
                     continue;
                 if (!_client.IsConnected())
-                    continue;
+                {
+                    MessageBox.Show("服务器断开连接");
+                    break;
+                }
                 SendClientData();
                 string receiveData = _client.ReceiveData();
                 try
@@ -172,15 +186,11 @@ namespace TestClient
                             }
                             if (serverData.TemplateSetChanged)
                             {
-                                UpdateTabCollection(serverData.TemplateList, curTab.TemplateSetList,
-                                   sameListItem,
-                                   delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DefaultTemplate"), configValue); });
+                                UpdateTabCollection(serverData.TemplateList, curTab.TemplateSetList, sameListItem);
                             }
                             if (serverData.DecodeTypeList.Count > 0)
                             {
-                                UpdateTabCollection(serverData.DecodeTypeList, curTab.DecodeTypeList,
-                                  sameListItem,
-                                  delegate (string configValue) { SetConfigValue(GetConfigKey(curTab.Header, "DecodeType"), configValue); });
+                                UpdateTabCollection(serverData.DecodeTypeList, curTab.DecodeTypeList, sameListItem);
                             }
                             if (serverData.KeyToPictureSet.Count > 0)
                             {

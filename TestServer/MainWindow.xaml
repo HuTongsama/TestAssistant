@@ -76,7 +76,8 @@
     <Grid>
         <Button x:Name="StartButton" Command="{Binding StartButtonCommand}" IsEnabled="{Binding IsEnableStartButton}" Content="{Binding StartButtonText}" HorizontalAlignment="Left" Margin="506,390,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="4.027,-0.474"/>
         <Button x:Name="EndButton" Command="{Binding EndButtonCommand}" Content="EndButton" HorizontalAlignment="Left" Margin="638,390,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="1.093,5.842"/>
-        <TabControl ItemsSource="{Binding TabItems}" ItemContainerStyle="{StaticResource TabItemStyle}" SelectedIndex="0" HorizontalAlignment="Left" Height="172" Margin="10,10,0,0" VerticalAlignment="Top" Width="446"></TabControl>
+        <TabControl ItemsSource="{Binding TabItems}" ItemContainerStyle="{StaticResource TabItemStyle}" SelectedItem="{Binding SelectedTab}" 
+                    HorizontalAlignment="Left" Height="172" Margin="10,10,0,0" VerticalAlignment="Top" Width="446"></TabControl>
         <Grid HorizontalAlignment="Left" Height="199" Margin="10,199,0,0" VerticalAlignment="Top" Width="446">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1*"/>

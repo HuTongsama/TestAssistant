@@ -102,6 +102,7 @@ namespace TestClient
                 if (value != _selectedServerConfig)
                 {
                     _selectedServerConfig = value;
+                    SetConfigValue(GetConfigKey(Header, "ServerConfig"), value.ItemName);
                     NotifyPropertyChanged("SelectedServerConfig");
                 }
             }
@@ -116,6 +117,7 @@ namespace TestClient
                 if (value != _selectedDefaultTemplate)
                 {
                     _selectedDefaultTemplate = value;
+                    SetConfigValue(GetConfigKey(Header, "DefaultTemplate"), value.ItemName);
                     NotifyPropertyChanged("SelectedDefaultTemplate");
                 }
             }
@@ -132,6 +134,7 @@ namespace TestClient
                 if (value != _selectedDecodeType)
                 {
                     _selectedDecodeType = value;
+                    SetConfigValue(GetConfigKey(Header, "DecodeType"), value.ItemName);
                     NotifyPropertyChanged("SelectedDecodeType");
                 }
             }

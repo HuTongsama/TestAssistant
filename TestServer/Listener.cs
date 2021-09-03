@@ -42,9 +42,9 @@ namespace TestServer
                 _listenSocket.Bind(new IPEndPoint(IPAddress.Any, port));
                 _listenSocket.Listen(5);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                MessageBox.Show("fail to create listenSocket");
+                MessageBox.Show(string.Format("fail to create listenSocket {0}",e.Message));
                 throw;
             }
             
@@ -55,9 +55,9 @@ namespace TestServer
             {
                 _listenSocket.BeginAccept(AcceptCallback, _listenSocket);
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                MessageBox.Show("listening error");
+                MessageBox.Show(string.Format("listening error {0}",e.Message));
                 throw;
             }
         }
