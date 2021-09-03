@@ -23,7 +23,7 @@ namespace Data
     {
         DBR = 0,
         DLR,
-        DCN
+        DDN
     }
     public class ClientData:IComparable<ClientData>
     {

@@ -18,15 +18,7 @@ namespace TestServer
         private Socket _listenSocket;
         private List<Socket> _clientSockets;
         private readonly object _clientsLock = new object();
-        private List<TestItem> _itemList;
-        public List<TestItem> ItemList
-        {
-            get 
-            {
-                GenerateItemList();
-                return _itemList;
-            }
-        }      
+       
         private string _recceiveString = string.Empty;
         public Func<List<ServerData>> GetServerData { get; set; }
         public Action<List<ClientData>> TestListCallback { get; set; }
@@ -34,7 +26,6 @@ namespace TestServer
         public Listener()
         {
             _clientSockets = new List<Socket>();
-            _itemList = new List<TestItem>();
             try
             {
                 int port = 8888;
@@ -149,29 +140,6 @@ namespace TestServer
             _listenSocket.BeginAccept(AcceptCallback, _listenSocket);
 
         }
-        
-        private void GenerateItemList()
-        {
-            _itemList.Clear();
-            for (int index = 0; index < _clientSockets.Count; ++index)
-            {
-                Socket socket = _clientSockets[index];
-                if (socket.Available > 0)
-                {
-                    _recceiveString = null;
-                    
-                    int receiveLength = SyncReceive(socket);
-                    if (receiveLength > 0)
-                        _recceiveString = _stringBuilder.ToString();
-                    if (_recceiveString != null)
-                    {
-                        TestItem item = TestItem.GenerateTestItem(_recceiveString);
-                        _itemList.Add(item);
-                    }
-                }
-            }
-            _itemList.Sort();
-        }
-      
+            
     }
 }

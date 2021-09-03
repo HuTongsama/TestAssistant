@@ -24,7 +24,7 @@ namespace Data
             }
             catch (Exception)
             {
-                MessageBox.Show(string.Format("{0} is invalid direction", dir));
+                MessageBox.Show(string.Format("{0} is invalid directory", dir));
                 return new List<string>();
             }
 

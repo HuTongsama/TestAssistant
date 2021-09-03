@@ -228,7 +228,7 @@
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Header}" Value="DCN">
+                <DataTrigger Binding="{Binding Header}" Value="DDN">
                     <Setter Property="Content">
                         <Setter.Value>
                             <ContentControl Template="{StaticResource TabGridTemplate}"/>

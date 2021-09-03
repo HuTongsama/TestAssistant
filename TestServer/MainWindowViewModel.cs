@@ -238,13 +238,13 @@ namespace TestServer
             if (selectedTab != string.Empty && selectedTab == productName)
                 SelectedTab = item;
 
-            productName = ProductType.DCN.ToString();
+            productName = ProductType.DDN.ToString();
             item = new TabItemViewModel(productName,
-                config.AppSettings.Settings["dcnPicturePath"].Value,
-                config.AppSettings.Settings["dcnTemplatePath"].Value,
-                config.AppSettings.Settings["dcnX86ProgramPath"].Value,
-                config.AppSettings.Settings["dcnX64ProgramPath"].Value,
-                config.AppSettings.Settings["dcnStdVersionPath"].Value);
+                config.AppSettings.Settings["ddnPicturePath"].Value,
+                config.AppSettings.Settings["ddnTemplatePath"].Value,
+                config.AppSettings.Settings["ddnX86ProgramPath"].Value,
+                config.AppSettings.Settings["ddnX64ProgramPath"].Value,
+                config.AppSettings.Settings["ddnStdVersionPath"].Value);
             item.PropertyChanged += this.TabItemPropertyChanged;
             item.SendDataCallback = SendToAllClients;
             _tabItems.Add(item);
@@ -614,8 +614,8 @@ namespace TestServer
                 case ProductType.DLR:
                     autoTestJson.runnerName = "DLRAutoTest.exe";
                     break;
-                case ProductType.DCN:
-                    autoTestJson.runnerName = "DCNAutoTest.exe";
+                case ProductType.DDN:
+                    autoTestJson.runnerName = "DDNAutoTest.exe";
                     break;
                 default:
                     return false;
@@ -1033,6 +1033,8 @@ namespace TestServer
                 templateName = "Test1";
             else if (productType == ProductType.DLR)
                 templateName = "locr";
+            else if (productType == ProductType.DDN)
+                templateName = "DN_1";
             algorithmTestJson.DefaultTemplate = new Dictionary<string, string>()
             {
                 {data.DefaultTemplate, templateName }

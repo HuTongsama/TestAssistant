@@ -45,7 +45,6 @@
     <Compile Include="ClientData.cs" />
     <Compile Include="CommonFuction.cs" />
     <Compile Include="ServerData.cs" />
-    <Compile Include="TestItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DataHead.cs" />
   </ItemGroup>

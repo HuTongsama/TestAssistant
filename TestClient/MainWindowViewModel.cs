@@ -126,13 +126,13 @@ namespace TestClient
                 SelectedItem = item;
             _tabItems.Add(productName, item);
 
-            productName = ProductType.DCN.ToString();
+            productName = ProductType.DDN.ToString();
             item = new TabItemViewModel(
                 productName,
-                config.AppSettings.Settings["dcnX86DllPath"].Value,
-                config.AppSettings.Settings["dcnX64DllPath"].Value,
-                config.AppSettings.Settings["dcnUseServerConfig"].Value,
-                config.AppSettings.Settings["dcnStandardVersion"].Value);
+                config.AppSettings.Settings["ddnX86DllPath"].Value,
+                config.AppSettings.Settings["ddnX64DllPath"].Value,
+                config.AppSettings.Settings["ddnUseServerConfig"].Value,
+                config.AppSettings.Settings["ddnStandardVersion"].Value);
             if (selectedProduct != string.Empty && selectedProduct == productName)
                 SelectedItem = item;
             _tabItems.Add(productName, item);
