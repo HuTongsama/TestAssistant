@@ -198,6 +198,8 @@ namespace TestServer
             }
         }
         private string _newFolderNameInConclusion = string.Empty;
+        private FtpConfig _ftpConfig = null;
+        private FTPHelper _ftpHelper = null;
         public MainWindowViewModel()
         {
             _listener = new Listener();
@@ -256,6 +258,17 @@ namespace TestServer
             DllPath = config.AppSettings.Settings["dllPath"].Value;
             CrashPath = config.AppSettings.Settings["crashPath"].Value;
             GenerateServerData();
+
+            if (System.IO.File.Exists("ftpConfig.json"))
+            {
+                string jsonData = System.IO.File.ReadAllText("ftpConfig.json");
+                _ftpConfig = JsonSerializer.Deserialize<FtpConfig>(jsonData);
+                if (_ftpConfig != null)
+                {
+                    _ftpHelper = new FTPHelper(_ftpConfig.FtpUrl, _ftpConfig.FtpUserName, _ftpConfig.FtpPassword);
+                    _ftpHelper.MakeDirectory(_ftpConfig.FtpCachePath);
+                }
+            }
 
         }
 
@@ -605,7 +618,9 @@ namespace TestServer
             ProcessStartInfo processStartInfo = new ProcessStartInfo();           
             processStartInfo.WorkingDirectory = autoTestPath;
             processStartInfo.Arguments = args;
-            processStartInfo.FileName = autoTestPath + "/" + "AutoTest.exe";         
+            processStartInfo.FileName = autoTestPath + "/" + "AutoTest.exe";
+            processStartInfo.CreateNoWindow = true;
+            processStartInfo.UseShellExecute = false;
             switch (data.ProductType)
             {
                 case ProductType.DBR:
@@ -668,11 +683,13 @@ namespace TestServer
                                 tmp.CopyTo(dstPath + "/" + tmp.Name);
                             }
                         }
-                        FTPHelper ftpHelper = new FTPHelper();
-                        string path = "Testing/" + data.UserName;
-                        if (ftpHelper.MakeDirectory(path))
+                        if (_ftpConfig != null)
                         {
-                            ftpHelper.UploadDirectory(dstDir, path);
+                            string path = _ftpConfig.FtpCachePath + '/' + data.UserName;
+                            if (_ftpHelper != null && _ftpHelper.MakeDirectory(path))
+                            {
+                                _ftpHelper.UploadDirectory(dstDir, path);
+                            }
                         }                       
                     }
                 }
@@ -753,6 +770,7 @@ namespace TestServer
                         processStartInfo.WorkingDirectory = _currentLocalPath;
                         processStartInfo.Arguments = args;
                         processStartInfo.FileName = _currentLocalPath + "\\" + "CSVConclusion.exe";
+                        processStartInfo.CreateNoWindow = true;
                         Process compareProcess = new Process();
                         compareProcess.StartInfo = processStartInfo;
                         compareProcess.Start();
@@ -805,6 +823,7 @@ namespace TestServer
             processStartInfo.WorkingDirectory = _currentLocalPath;
             processStartInfo.Arguments = _newFolderNameInConclusion;
             processStartInfo.FileName = _currentLocalPath + "/" + "GetDiffPicture.exe";
+            processStartInfo.CreateNoWindow = true;
             LogMessage("Start getPicture");
             Process getPicProcess = new Process();
             getPicProcess.StartInfo = processStartInfo;
@@ -815,16 +834,22 @@ namespace TestServer
             int exitCode = WaitProcess(getPicProcess);
             if (exitCode == 0)
             {
-                string path = "Testing/" + data.UserName;
-                FTPHelper ftpHelper = new FTPHelper();
-                DirectoryInfo dirInfo = new DirectoryInfo(_newFolderNameInConclusion);
-                if (ftpHelper.MakeDirectory(path))
-                { 
-                    ftpHelper.UploadDirectory(dirInfo, path); 
+                if (_ftpConfig != null)
+                {
+                    string path = _ftpConfig.FtpCachePath + '/' + data.UserName;
+                    DirectoryInfo dirInfo = new DirectoryInfo(_newFolderNameInConclusion);
+                    if (_ftpHelper != null && _ftpHelper.MakeDirectory(path))
+                    {
+                        _ftpHelper.UploadDirectory(dirInfo, path);
+                    }
+                    else
+                    {
+                        LogMessage("Ftp path error :" + path);
+                    }
                 }
                 else
                 {
-                    LogMessage("Ftp path error :" + path);
+                    LogMessage("ftpConfig null");
                 }
             }
             return;
@@ -972,8 +997,7 @@ namespace TestServer
             try
             {
                 _currentLocalPath = DllPath + "/" + data.VersionInfo;
-                FTPHelper ftpHelper = new FTPHelper();
-                if (ftpHelper.Download(data.FtpCachePath, _currentLocalPath))
+                if (_ftpHelper != null && _ftpHelper.Download(data.FtpCachePath, _currentLocalPath))
                 {
                     return true;
                 }

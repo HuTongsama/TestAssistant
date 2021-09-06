@@ -14,25 +14,10 @@ namespace TestClient
     public class Client : SocketBase.SocketBase
     {
         private Socket _clientSocket;
-        private IPAddress _ipAddress;
-        private int _port;
         private string _recceiveString = string.Empty;
+        ManualResetEvent _connectEvent = new ManualResetEvent(false);
         public Client()
         {
-            try
-            {              
-                var addressArr = Dns.GetHostAddresses("192.168.2.81");               
-                _ipAddress = addressArr[0];
-               
-                _port = 8888;
-                _clientSocket = new Socket(_ipAddress.AddressFamily,
-                SocketType.Stream, ProtocolType.Tcp);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(string.Format("create client failed {0}", e.Message));
-                throw;
-            }
         }
         public bool IsConnected()
         {
@@ -61,18 +46,31 @@ namespace TestClient
             byte[] finalData = PackData(data);
             SyncSend(_clientSocket, finalData);
         }
-        public void Connect()
+        public bool Connect(string ip,int port = 8888)
         {
             try
             {
-                IPEndPoint remoteEP = new IPEndPoint(_ipAddress, _port);
+                MessageBox.Show(string.Format("start connect {0} port: {1}", ip, port));
+                var addressArr = Dns.GetHostAddresses(ip);
+                var ipAddress = addressArr[0];
+
+                _clientSocket = new Socket(ipAddress.AddressFamily,
+                SocketType.Stream, ProtocolType.Tcp);
+                IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);
+                _connectEvent.Reset();
                 _clientSocket.BeginConnect(remoteEP,
                 new AsyncCallback(ConnectCallback), null);
+                if (!_connectEvent.WaitOne(10000))
+                {
+                    MessageBox.Show("Connect timeout");
+                    return false;
+                }               
+                return true;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                MessageBox.Show("connect server failed");
-                throw;
+                MessageBox.Show(string.Format("connect server failed {0}", e.Message));
+                return false;
             }
         }
         private void ConnectCallback(IAsyncResult ar)
@@ -80,11 +78,12 @@ namespace TestClient
             try
             {
                 _clientSocket.EndConnect(ar);
+                _connectEvent.Set();
             }
             catch (Exception e)
             {
                 MessageBox.Show(string.Format("connect callback fail {0}",e.Message));
-                throw;
+                //throw;
             }
         }
 

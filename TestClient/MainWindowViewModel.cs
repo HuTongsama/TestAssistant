@@ -42,8 +42,9 @@ namespace TestClient
         private Client _client = new Client();
         private ClientData _clientData = null;
         private bool _needSendData = false;
-        private string _ftpCachePath = string.Empty;
-
+        private FtpConfig _ftpConfig = null;
+        private FTPHelper _ftpHelper = null;
+        public string ServerAddress { get; set; } = "192.168.2.81";
         private void OnPerformanceButtonClick(object obj)
         {
             ClientData data = GenerateClientData();
@@ -96,15 +97,40 @@ namespace TestClient
                 return _compareButtonCommand;
             }
         }
+        
+        private RelayCommand _connectButtonCommand;
+        public ICommand ConnectButtonCommand
+        {
+            get
+            {
+                if (_connectButtonCommand == null)
+                {
+                    _connectButtonCommand = new RelayCommand(delegate (object obj)
+                    {
+                        if (!_client.Connect(ServerAddress))
+                        {
+                            MessageBox.Show("Fail to connect,try again");
+                        }
+                        else
+                        {
+                            MessageBox.Show("Succeed to connect");
+                            Thread clientThread = new Thread(ClientThreadFunc);
+                            clientThread.IsBackground = true;
+                            clientThread.Start();
+                        }
+                    },
+                    delegate { return true; });
+                }
+                return _connectButtonCommand;
+            }
+        }
+
         public ObservableCollection<ListItem> ServerTestList { get; set; } = new ObservableCollection<ListItem>();
         public ObservableCollection<ListItem> ServerCompareList { get; set; } = new ObservableCollection<ListItem>();
         public MainWindowViewModel()
         {
             Configuration config = System.Configuration.ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
             string selectedProduct = config.AppSettings.Settings["selectedProduct"].Value;
-            _ftpCachePath = "Testing/Cache";
-            //FTPHelper ftpHelper = new FTPHelper();
-            //ftpHelper.MakeDirectory(_ftpCachePath);
             string productName = ProductType.DBR.ToString();
             TabItemViewModel item = new TabItemViewModel(
                 productName,
@@ -137,10 +163,16 @@ namespace TestClient
                 SelectedItem = item;
             _tabItems.Add(productName, item);
 
-            Thread clientThread = new Thread(ClientThreadFunc);
-            clientThread.IsBackground = true;
-            clientThread.Start();
-
+            if (System.IO.File.Exists("ftpConfig.json"))
+            {
+                string jsonData = System.IO.File.ReadAllText("ftpConfig.json");
+                _ftpConfig = JsonSerializer.Deserialize<FtpConfig>(jsonData);
+                if (_ftpConfig != null)
+                {
+                    _ftpHelper = new FTPHelper(_ftpConfig.FtpUrl, _ftpConfig.FtpUserName, _ftpConfig.FtpPassword);
+                    _ftpHelper.MakeDirectory(_ftpConfig.FtpCachePath);
+                }
+            }       
         }
 
         private void UpdateTabCollection(List<string> srcList, ObservableCollection<ListItem> listItems,
@@ -158,8 +190,7 @@ namespace TestClient
             });
         }
         private void ClientThreadFunc()
-        {
-            _client.Connect();
+        {          
             while (true)
             {
                 if (_client == null)
@@ -214,12 +245,15 @@ namespace TestClient
                             }                          
                             if (serverData.FinishedVersionInfo != string.Empty)
                             {
-                                App.Current.Dispatcher.Invoke((Action)
-                                    delegate
-                                    {
-                                        ListItem listItem = new ListItem(serverData.FinishedVersionInfo);
-                                        curTab.TestVersionList.Add(listItem);
-                                    });
+                                if (serverData.FinishedVersionInfo.Contains(Environment.UserName))
+                                {
+                                    App.Current.Dispatcher.Invoke((Action)
+                                      delegate
+                                      {
+                                          ListItem listItem = new ListItem(serverData.FinishedVersionInfo);
+                                          curTab.TestVersionList.Add(listItem);
+                                      });
+                                }
                             }
                             if (serverData.ConfigListChanged)
                             {
@@ -350,8 +384,7 @@ namespace TestClient
                     dllPathList.Add(SelectedItem.X64Path);
                 if (SelectedItem.X86Path != string.Empty)
                     dllPathList.Add(SelectedItem.X86Path);
-                FTPHelper ftpHelper = new FTPHelper();
-                if (ftpHelper.MakeDirectory(ftpPath))
+                if (_ftpHelper != null && _ftpHelper.MakeDirectory(ftpPath))
                 {
                     foreach (var path in dllPathList)
                     {
@@ -359,7 +392,7 @@ namespace TestClient
                         FileInfo[] files = dirInfo.GetFiles("*.dll", SearchOption.AllDirectories);
                         foreach (var file in files)
                         {
-                            ftpHelper.Upload(file, ftpPath);
+                            _ftpHelper.Upload(file, ftpPath);
                         }
                     }
                 }
@@ -442,7 +475,7 @@ namespace TestClient
                 string errMessage = string.Empty;
                 if (DataCheck(data, out errMessage))
                 {
-                    string ftpCachePath = _ftpCachePath + "/" + data.VersionInfo;
+                    string ftpCachePath = _ftpConfig.FtpCachePath + "/" + data.VersionInfo;
                     data.FtpCachePath = ftpCachePath;
                     if (data.OperateType == OperateType.Compare)
                     {

@@ -123,4 +123,7 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>Copy "$(ProjectDir)ftpConfig.json" "$(ProjectDir)$(OutDir)"</PreBuildEvent>
+  </PropertyGroup>
 </Project>

@@ -9,6 +9,14 @@ using System.Windows;
 
 namespace FTP
 {
+    public class FtpConfig
+    {
+        public string FtpUrl { get; set; } = string.Empty;
+        public string FtpCachePath { get; set; } = string.Empty;
+        public string FtpUserName { get; set; } = string.Empty;
+        public string FtpPassword { get; set; } = string.Empty;
+    }
+
     public class FTPHelper
     {
         private string _ftpUrl = string.Empty;
@@ -16,11 +24,11 @@ namespace FTP
         private string _password = string.Empty;
 
 
-        public FTPHelper()
+        public FTPHelper(string url,string userName,string password)
         {
-            _ftpUrl = "ftp://192.168.2.8";
-            _userName = "ftpuser";
-            _password = "Aa000000";
+            _ftpUrl = "ftp://" + url;
+            _userName = userName;
+            _password = password;
         }
 
         public void Upload(FileInfo localFile, string dstPath)
@@ -104,28 +112,44 @@ namespace FTP
         //can check if directory exist
         public bool MakeDirectory(string dir)
         {
-            string path = _ftpUrl + "/" + dir;
-            FtpWebRequest request = (FtpWebRequest)WebRequest.Create(path);
-            request.Credentials = new NetworkCredential(_userName, _password);
-            request.Method = WebRequestMethods.Ftp.MakeDirectory;
-            try
-            {
-                using (FtpWebResponse response = (FtpWebResponse)request.GetResponse())
+            bool hasDir = false;
+            var paths = dir.Split('/');
+            string curPath = _ftpUrl;
+            foreach (var tmpPath in paths)
+            {                
+                try
                 {
-                    return true;
+                    curPath = curPath + "/" + tmpPath;
+                    FtpWebRequest request = (FtpWebRequest)WebRequest.Create(curPath);
+                    request.Credentials = new NetworkCredential(_userName, _password);
+                    request.Method = WebRequestMethods.Ftp.MakeDirectory;
+
+                    using (FtpWebResponse response = (FtpWebResponse)request.GetResponse())
+                    {
+                        hasDir = true;
+                    }
                 }
-            }
-            catch (WebException e)
-            {              
-                FtpWebResponse response = (FtpWebResponse)e.Response;
-                if (response.StatusCode ==
-                    FtpStatusCode.ActionNotTakenFileUnavailable)
+                catch (Exception e)
                 {
-                    return true;
-                    //Does not exist
+                    WebException webE = e as WebException;
+                    FtpWebResponse response = null;
+                    if (webE != null)
+                         response = (FtpWebResponse)webE.Response;
+                    if (response != null && response.StatusCode ==
+                        FtpStatusCode.ActionNotTakenFileUnavailable)
+                    {
+                        hasDir = true;
+                    }
+                    else 
+                    {
+                        hasDir = false;
+                    }
                 }
+                if (!hasDir)
+                    return false;
             }
-            return false;
+            return hasDir;
+            
         }
 
         public void UploadDirectory(DirectoryInfo localDirectory, string dstPath)
