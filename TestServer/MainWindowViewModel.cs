@@ -114,6 +114,20 @@ namespace TestServer
                 }
             }
         }
+        private string _programPath = string.Empty;
+        public string ProgramPath
+        {
+            get => _programPath;
+            set
+            {
+                if (value != _programPath)
+                {
+                    _programPath = value;
+                    SetConfigValue("programPath", value);
+                    NotifyPropertyChanged("ProgramPath");
+                }
+            }
+        }
         private string _currentLocalPath = string.Empty;
         private void OnResultPathButtonClick(object obj)
         {
@@ -197,7 +211,28 @@ namespace TestServer
                 return _crashPathButtonCommand;
             }
         }
+        private RelayCommand _programPathButtonCommand;
+        public ICommand ProgramPathButtonCommand
+        {
+            get
+            {
+                if (_programPathButtonCommand == null)
+                {
+                    _programPathButtonCommand = new RelayCommand(delegate (object obj)
+                    {
+                        string path = OnPathButtonClicked();
+                        if (path != null)
+                        {
+                            ProgramPath = path;
+                        }
+                    },
+                    delegate { return true; });
+                }
+                return _programPathButtonCommand;
+            }
+        }
         private string _newFolderNameInConclusion = string.Empty;
+        private ServerConfig _serverConfig = new ServerConfig();
         private FtpConfig _ftpConfig = null;
         private FTPHelper _ftpHelper = null;
         public MainWindowViewModel()
@@ -221,7 +256,7 @@ namespace TestServer
                 config.AppSettings.Settings["dbrX64ProgramPath"].Value,
                 config.AppSettings.Settings["dbrStdVersionPath"].Value);                    
             item.PropertyChanged += this.TabItemPropertyChanged;
-            item.SendDataCallback = SendToAllClients;
+            item.FolderStateChanged += this.TabItemPropertyChanged;
             SelectedTab = item;
             _tabItems.Add(item);
             
@@ -235,7 +270,7 @@ namespace TestServer
                 config.AppSettings.Settings["dlrX64ProgramPath"].Value,
                 config.AppSettings.Settings["dlrStdVersionPath"].Value);            
             item.PropertyChanged += this.TabItemPropertyChanged;
-            item.SendDataCallback = SendToAllClients;
+            item.FolderStateChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
             if (selectedTab != string.Empty && selectedTab == productName)
                 SelectedTab = item;
@@ -248,7 +283,7 @@ namespace TestServer
                 config.AppSettings.Settings["ddnX64ProgramPath"].Value,
                 config.AppSettings.Settings["ddnStdVersionPath"].Value);
             item.PropertyChanged += this.TabItemPropertyChanged;
-            item.SendDataCallback = SendToAllClients;
+            item.FolderStateChanged += this.TabItemPropertyChanged;
             _tabItems.Add(item);
             if (selectedTab != string.Empty && selectedTab == productName)
                 SelectedTab = item;
@@ -257,6 +292,7 @@ namespace TestServer
             ConclusionPath = config.AppSettings.Settings["conclusionPath"].Value;
             DllPath = config.AppSettings.Settings["dllPath"].Value;
             CrashPath = config.AppSettings.Settings["crashPath"].Value;
+            ProgramPath = config.AppSettings.Settings["programPath"].Value;
             GenerateServerData();
 
             if (System.IO.File.Exists("ftpConfig.json"))
@@ -357,11 +393,10 @@ namespace TestServer
         }
         private void GenerateServerData()
         {
-            Dictionary<string, ServerConfig> productDefaultConfig = new Dictionary<string, ServerConfig>();
             if (System.IO.File.Exists("ServerConfig.json"))
             {
                 string jsonData = System.IO.File.ReadAllText("ServerConfig.json");
-                productDefaultConfig = JsonSerializer.Deserialize<Dictionary<string, ServerConfig>>(jsonData);
+                _serverConfig = JsonSerializer.Deserialize<ServerConfig>(jsonData);
             }
             foreach (var tabItem in TabItems)
             {
@@ -378,10 +413,11 @@ namespace TestServer
                 {
                     serverData.DecodeTypeList.Add(TestDataType.Buffer.ToString());
                 }
-                if (productDefaultConfig.ContainsKey(key))
+                if (_serverConfig.TagToProduct != null &&
+                    _serverConfig.TagToProduct.ContainsKey(key))
                 {
-                    ServerConfig config = productDefaultConfig[key];
-                    tabItem.ServerConfig = config;
+                    ProductConfig config = _serverConfig.TagToProduct[key];
+                    tabItem.ProductConfig = config;
                     foreach (var tagToImageSet in config.TagToImageSet)
                     {
                         if (!serverData.KeyToPictureSet.ContainsKey(tagToImageSet.Key))
@@ -461,7 +497,7 @@ namespace TestServer
                                     var tab = GetTabModelByProduct(data.ProductType);
                                     if (tab != null && data.ServerConfig != null)
                                     {
-                                        string configPath = tab.ServerConfig.DefaultConfigPath + "/" + data.ServerConfig;
+                                        string configPath = tab.ProductConfig.DefaultConfigPath + "/" + data.ServerConfig;
                                         if (System.IO.File.Exists(configPath))
                                         {
                                             succeedConfig = true;
@@ -484,7 +520,8 @@ namespace TestServer
                                         }
                                         catch (Exception e)
                                         {
-                                            MessageBox.Show(e.Message);
+                                            //MessageBox.Show(e.Message);
+                                            LogMessage(e.Message);
                                             succeedConfig = false;
                                         }
                                     }
@@ -566,7 +603,8 @@ namespace TestServer
                             }
                             catch (Exception e)
                             {
-                                MessageBox.Show(e.Message);
+                                //MessageBox.Show(e.Message);
+                                LogMessage(e.Message);
                                 message = e.Message;
                                 serverData.Message = message;
                                 SendToAllClients(serverData);
@@ -599,7 +637,7 @@ namespace TestServer
                 byte[] jsonData = System.IO.File.ReadAllBytes(autoTestJsonPath);
                 autoTestJson = JsonSerializer.Deserialize<AutoTestJson>(jsonData);
             }
-
+            string autoTestPath = _currentLocalPath.Substring(0, _currentLocalPath.LastIndexOf("/"));
             string args = "-m ";
             switch (data.OperateType)
             {
@@ -607,19 +645,22 @@ namespace TestServer
                     autoTestJson.testType = "-p";
                     break;
                 case OperateType.Stability:
-                    autoTestJson.testType = "-s";
+                    {
+                        autoTestJson.testType = "-s";
+                        autoTestJson.MemorySharePath = autoTestPath + "/" + "TestMemShare.exe";
+                        autoTestJson.DebugCrashPath = autoTestPath + "/" + "adplusCrash.bat";
+                        autoTestJson.DebugTimeoutPath = autoTestPath + "/" + "adplusTimeout.bat";
+                    }
                     break;
                 case OperateType.Compare:
                 default:
                     return false;
-            }
-            string autoTestPath = _currentLocalPath.Substring(0, _currentLocalPath.LastIndexOf("/"));
+            }          
             args += data.VersionInfo;            
             ProcessStartInfo processStartInfo = new ProcessStartInfo();           
             processStartInfo.WorkingDirectory = autoTestPath;
             processStartInfo.Arguments = args;
             processStartInfo.FileName = autoTestPath + "/" + "AutoTest.exe";
-            processStartInfo.CreateNoWindow = true;
             processStartInfo.UseShellExecute = false;
             switch (data.ProductType)
             {
@@ -680,7 +721,7 @@ namespace TestServer
                             while ((s = sr.ReadLine()) != null)
                             {
                                 FileInfo tmp = new FileInfo(s);
-                                tmp.CopyTo(dstPath + "/" + tmp.Name);
+                                tmp.CopyTo(dstPath + "/" + tmp.Name,true);
                             }
                         }
                         if (_ftpConfig != null)
@@ -688,6 +729,9 @@ namespace TestServer
                             string path = _ftpConfig.FtpCachePath + '/' + data.UserName;
                             if (_ftpHelper != null && _ftpHelper.MakeDirectory(path))
                             {
+                                ServerData serverData = new ServerData();
+                                serverData.Message = string.Format("Version {0} exist crash,save file to ftp", data.VersionInfo);
+                                SendToAllClients(serverData);
                                 _ftpHelper.UploadDirectory(dstDir, path);
                             }
                         }                       
@@ -700,7 +744,8 @@ namespace TestServer
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message);
+                //MessageBox.Show(e.Message);
+                LogMessage(e.Message);
                 return false;
             }
             
@@ -721,87 +766,99 @@ namespace TestServer
                 }
                 foreach (var data in CompareWaitList)
                 {
-                    _currentLocalPath = DllPath + "/" + data.VersionInfo;
-                    if (!System.IO.Directory.Exists(_currentLocalPath))
+                    try
                     {
-                        DirectoryInfo dirInfo = new DirectoryInfo(_currentLocalPath);
-                        dirInfo.Create();
-                        CopyContentToLocalPath(data);
-                    }
-                    serverData.CompareWaitingList.RemoveAt(0);
-                    serverData.CompareListChanged = true;
-                    message = "Start compare " + data.TestVersion;
-                    LogMessage(message);
-                    serverData.Message = message;
-                    serverData.ProductType = data.ProductType.ToString();
-                    SendToAllClients(serverData);
-
-                    bool compareFinished = false;
-                    string stdRootPath = ResultPath;
-                    var productTab = GetTabModelByProduct(data.ProductType);
-                    if (System.IO.Directory.Exists(productTab.StdVersionPath))
-                    {
-                        DirectoryInfo dirInfo = new DirectoryInfo(productTab.StdVersionPath);
-                        var subDirList = dirInfo.GetDirectories();
-                        foreach (var subDir in subDirList)
+                        _currentLocalPath = DllPath + "/" + data.VersionInfo;
+                        if (!System.IO.Directory.Exists(_currentLocalPath))
                         {
-                            if (subDir.Name == data.StandardVersion)
+                            DirectoryInfo dirInfo = new DirectoryInfo(_currentLocalPath);
+                            dirInfo.Create();
+                            CopyContentToLocalPath(data);
+                        }
+                        serverData.CompareWaitingList.RemoveAt(0);
+                        serverData.CompareListChanged = true;
+                        message = "Start compare " + data.TestVersion;
+                        LogMessage(message);
+                        serverData.Message = message;
+                        serverData.ProductType = data.ProductType.ToString();
+                        SendToAllClients(serverData);
+
+                        bool compareFinished = false;
+                        string stdRootPath = ResultPath;
+                        var productTab = GetTabModelByProduct(data.ProductType);
+                        if (System.IO.Directory.Exists(productTab.StdVersionPath))
+                        {
+                            DirectoryInfo dirInfo = new DirectoryInfo(productTab.StdVersionPath);
+                            var subDirList = dirInfo.GetDirectories();
+                            foreach (var subDir in subDirList)
                             {
-                                stdRootPath = productTab.StdVersionPath;
-                                break;
+                                if (subDir.Name == data.StandardVersion)
+                                {
+                                    stdRootPath = productTab.StdVersionPath;
+                                    break;
+                                }
                             }
                         }
-                    }
-                    string stdPath = stdRootPath + "\\" + data.StandardVersion;
-                    string cmpPath = ResultPath + "\\" + data.TestVersion;
-                    if (!System.IO.Directory.Exists(stdPath))
-                    {
-                        message += "Version " + data.StandardVersion + "can not be found\n";
-                    }
-                    else if (!System.IO.Directory.Exists(cmpPath))
-                    {
-                        message += "Version" + data.TestVersion + "can not be found\n";
-                    }
-                    else
-                    {
-                        string args = ConclusionPath + "/" + " " + stdPath + " " + cmpPath;
-                        ProcessStartInfo processStartInfo = new ProcessStartInfo();
-                        processStartInfo.UseShellExecute = false;
-                        processStartInfo.WorkingDirectory = _currentLocalPath;
-                        processStartInfo.Arguments = args;
-                        processStartInfo.FileName = _currentLocalPath + "\\" + "CSVConclusion.exe";
-                        processStartInfo.CreateNoWindow = true;
-                        Process compareProcess = new Process();
-                        compareProcess.StartInfo = processStartInfo;
-                        compareProcess.Start();
-                        
-                        if (compareProcess == null)
+                        string stdPath = stdRootPath + "\\" + data.StandardVersion;
+                        string cmpPath = ResultPath + "\\" + data.TestVersion;
+                        if (!System.IO.Directory.Exists(stdPath))
                         {
-                            message += "Fail to start Compare";
+                            message += "Version " + data.StandardVersion + "can not be found\n";
+                        }
+                        else if (!System.IO.Directory.Exists(cmpPath))
+                        {
+                            message += "Version" + data.TestVersion + "can not be found\n";
                         }
                         else
                         {
-                            int exitCode = WaitProcess(compareProcess);
+                            string args = ConclusionPath + "/" + " " + stdPath + " " + cmpPath;
+                            ProcessStartInfo processStartInfo = new ProcessStartInfo();
+                            processStartInfo.UseShellExecute = false;
+                            processStartInfo.WorkingDirectory = _currentLocalPath;
+                            processStartInfo.Arguments = args;
+                            processStartInfo.FileName = _currentLocalPath + "\\" + "CSVConclusion.exe";
+                            Process compareProcess = new Process();
+                            compareProcess.StartInfo = processStartInfo;
+                            compareProcess.Start();
 
-                            if (exitCode == 0)
+                            if (compareProcess == null)
                             {
-                                CallGetPicture(data);
-                                compareFinished = true;
+                                message += "Fail to start Compare";
                             }
                             else
                             {
-                                message += "Call compare failed";
+                                int exitCode = WaitProcess(compareProcess);
+
+                                if (exitCode == 0)
+                                {
+                                    CallGetPicture(data, stdPath, cmpPath);
+                                    compareFinished = true;
+                                }
+                                else
+                                {
+                                    message += "Call compare failed";
+                                }
                             }
                         }
-                    }
 
-                    if (compareFinished)
-                    {
-                        message = "Compare " + data.TestVersion + " finished";
+                        if (compareFinished)
+                        {
+                            message = "Compare " + data.TestVersion + " finished";
+                        }
+                        LogMessage(message);
+                        serverData.Message = message;
+                        SendToAllClients(serverData);
                     }
-                    LogMessage(message);
-                    serverData.Message = message;
-                    SendToAllClients(serverData);
+                    catch (Exception e)
+                    {
+                        message = "Compare " + data.TestVersion + " failed";
+                        LogMessage(e.Message);
+                        LogMessage(message);
+                        serverData.Message = message;
+                        SendToAllClients(serverData);
+                        continue;
+                    }
+                   
                 }
                 App.Current.Dispatcher.Invoke((Action)delegate
                {
@@ -814,44 +871,51 @@ namespace TestServer
         {
             _newFolderNameInConclusion = e.FullPath;
         }      
-        private void CallGetPicture(ClientData data)
+        private void CallGetPicture(ClientData data,string standardVersionPath,string compareVersionPath)
         {
-            if (!System.IO.Directory.Exists(_newFolderNameInConclusion))
-                return;
-            ProcessStartInfo processStartInfo = new ProcessStartInfo();
-            processStartInfo.UseShellExecute = false;
-            processStartInfo.WorkingDirectory = _currentLocalPath;
-            processStartInfo.Arguments = _newFolderNameInConclusion;
-            processStartInfo.FileName = _currentLocalPath + "/" + "GetDiffPicture.exe";
-            processStartInfo.CreateNoWindow = true;
-            LogMessage("Start getPicture");
-            Process getPicProcess = new Process();
-            getPicProcess.StartInfo = processStartInfo;
-            getPicProcess.Start();
-            LogMessage("GetPicture finished");
-            if (getPicProcess == null)
-                return;
-            int exitCode = WaitProcess(getPicProcess);
-            if (exitCode == 0)
+            try
             {
-                if (_ftpConfig != null)
+                if (!System.IO.Directory.Exists(_newFolderNameInConclusion))
+                    return;
+                ProcessStartInfo processStartInfo = new ProcessStartInfo();
+                processStartInfo.UseShellExecute = false;
+                processStartInfo.WorkingDirectory = _currentLocalPath;
+                processStartInfo.Arguments = _newFolderNameInConclusion + " " + standardVersionPath + " " + compareVersionPath;
+                processStartInfo.FileName = _currentLocalPath + "/" + "GetDiffPicture.exe";
+                LogMessage("Start getPicture");
+                Process getPicProcess = new Process();
+                getPicProcess.StartInfo = processStartInfo;
+                getPicProcess.Start();
+                LogMessage("GetPicture finished");
+                if (getPicProcess == null)
+                    return;
+                int exitCode = WaitProcess(getPicProcess);
+                if (exitCode == 0)
                 {
-                    string path = _ftpConfig.FtpCachePath + '/' + data.UserName;
-                    DirectoryInfo dirInfo = new DirectoryInfo(_newFolderNameInConclusion);
-                    if (_ftpHelper != null && _ftpHelper.MakeDirectory(path))
+                    if (_ftpConfig != null)
                     {
-                        _ftpHelper.UploadDirectory(dirInfo, path);
+                        string path = _ftpConfig.FtpCachePath + '/' + data.UserName;
+                        DirectoryInfo dirInfo = new DirectoryInfo(_newFolderNameInConclusion);
+                        if (_ftpHelper != null && _ftpHelper.MakeDirectory(path))
+                        {
+                            _ftpHelper.UploadDirectory(dirInfo, path);
+                        }
+                        else
+                        {
+                            LogMessage("Ftp path error :" + path);
+                        }
                     }
                     else
                     {
-                        LogMessage("Ftp path error :" + path);
+                        LogMessage("ftpConfig null");
                     }
                 }
-                else
-                {
-                    LogMessage("ftpConfig null");
-                }
             }
+            catch (Exception e)
+            {
+                LogMessage(e.Message);               
+            }
+            
             return;
         }
         private int WaitProcess(Process process)
@@ -921,10 +985,9 @@ namespace TestServer
                     break;
             }
       
-            //string message = GenerateMessage();
-            //byte[] data = System.Text.Encoding.ASCII.GetBytes(message);
             SendToAllClients(serverData);
         }
+
         private void SendToAllClients(ServerData serverData)
         {           
             string jsonString = JsonSerializer.Serialize(serverData);
@@ -1008,18 +1071,59 @@ namespace TestServer
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message);
+                //MessageBox.Show(e.Message);
+                LogMessage(e.Message);
                 return false;
             }
         }
         private void CopyContentToLocalPath(ClientData data)
         {
+            if (System.IO.Directory.Exists(ProgramPath))
+            {
+                DirectoryInfo commonContentDir = new DirectoryInfo(ProgramPath);
+                FileInfo[] fileInfos = commonContentDir.GetFiles("*.*");
+                foreach (var fileInfo in fileInfos)
+                {
+                    string dstPath = Path.Combine(_currentLocalPath, fileInfo.Name);
+                    if (fileInfo.Name == "AutoTest.exe"
+                        || fileInfo.Name == "adplus.exe"
+                        || fileInfo.Name == "TestMemShare.exe"
+                        || fileInfo.Name == "ICSharpCode.SharpZipLib.dll"
+                        || fileInfo.Name == "Newtonsoft.Json.dll")
+                    {
+                        dstPath = Path.Combine(_dllPath, fileInfo.Name);
+                    }
+                    if (!System.IO.File.Exists(dstPath))
+                    {
+                        fileInfo.CopyTo(dstPath);
+                    }
+                }
+
+            }
             string contentPath = string.Empty;
+            string commonDllPath = string.Empty;
             foreach (var tabItem in TabItems)
             {
                 if (tabItem.Header == data.ProductType.ToString())
                 {
-                    contentPath = tabItem.X64ProgramPath;
+                    if (data.OperateType == OperateType.Performance)
+                    {
+                        contentPath = tabItem.X64ProgramPath;
+                        commonDllPath = ProgramPath + "/" + "x64";
+                    }
+                    else if (data.OperateType == OperateType.Stability)
+                    {
+                        if (_serverConfig.StabilityType == "x64")
+                        {
+                            contentPath = tabItem.X64ProgramPath;
+                            commonDllPath = ProgramPath + "/" + "x64";
+                        }
+                        else
+                        {
+                            contentPath = tabItem.X86ProgramPath;
+                            commonDllPath = ProgramPath + "/" + "x86";
+                        }
+                    }
                     break;
                 }
             }
@@ -1031,7 +1135,19 @@ namespace TestServer
             {
                 string dstPath = Path.Combine(_currentLocalPath, file.Name);
                 if (!System.IO.File.Exists(dstPath))
-                    file.CopyTo(Path.Combine(_currentLocalPath, file.Name));                
+                {
+                    file.CopyTo(dstPath);
+                }
+            }
+            if (System.IO.Directory.Exists(commonDllPath))
+            {
+                dirInfo = new DirectoryInfo(commonDllPath);
+                fileList = dirInfo.GetFiles("*.*");
+                foreach (var file in fileList)
+                {
+                    string dstPath = Path.Combine(_currentLocalPath, file.Name);
+                    file.CopyTo(dstPath,true);                 
+                }
             }
         }
         private AlgorithmTestJson TransClientToJson(ClientData data)
@@ -1049,7 +1165,7 @@ namespace TestServer
             if (operateType == OperateType.Performance)
                 algorithmTestJson.FilePath = productTab.PictureSetPath;
             else if (operateType == OperateType.Stability)
-                algorithmTestJson.FilePath = "";
+                algorithmTestJson.FilePath = _serverConfig.PicturePath;
             algorithmTestJson.TemplatePath = productTab.TemplatePath;
             algorithmTestJson.DecodeType = data.TestDataType.ToString();
             string templateName = string.Empty;

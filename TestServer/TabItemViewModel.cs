@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -28,6 +29,7 @@ namespace TestServer
                         watcher.EnableRaisingEvents = true;
                         watcher.Created += PictureSetContentChanged;
                         watcher.Deleted += PictureSetContentChanged;
+                        watcher.Renamed += PictureSetContentChanged;
                         _pathToWatcher[PictureSetPath] = watcher;
                     }
                     else
@@ -36,6 +38,7 @@ namespace TestServer
                         watcher.EnableRaisingEvents = true;
                         watcher.Created += PictureSetContentChanged;
                         watcher.Deleted += PictureSetContentChanged;
+                        watcher.Renamed += PictureSetContentChanged;
                         _pathToWatcher.Add(PictureSetPath, watcher);
                     }
                     NotifyPropertyChanged("PictureSetPath");
@@ -58,6 +61,7 @@ namespace TestServer
                         watcher.EnableRaisingEvents = true;
                         watcher.Created += TemplateSetContentChanged;
                         watcher.Deleted += TemplateSetContentChanged;
+                        watcher.Renamed += TemplateSetContentChanged;
                         _pathToWatcher[TemplatePath] = watcher;
                     }
                     else
@@ -66,6 +70,7 @@ namespace TestServer
                         watcher.EnableRaisingEvents = true;
                         watcher.Created += TemplateSetContentChanged;
                         watcher.Deleted += TemplateSetContentChanged;
+                        watcher.Renamed += TemplateSetContentChanged;
                         _pathToWatcher.Add(TemplatePath, watcher);
                     }
                     NotifyPropertyChanged("TemplatePath");
@@ -116,6 +121,7 @@ namespace TestServer
                         watcher.EnableRaisingEvents = true;
                         watcher.Created += StdVersionContentChanged;
                         watcher.Deleted += StdVersionContentChanged;
+                        watcher.Renamed += StdVersionContentChanged;
                         _pathToWatcher[StdVersionPath] = watcher;
                     }
                     else
@@ -123,6 +129,7 @@ namespace TestServer
                         FileSystemWatcher watcher = new FileSystemWatcher(StdVersionPath);
                         watcher.Created += StdVersionContentChanged;
                         watcher.Deleted += StdVersionContentChanged;
+                        watcher.Renamed += StdVersionContentChanged;
                         watcher.EnableRaisingEvents = true;                      
                         _pathToWatcher.Add(StdVersionPath, watcher);
                     }
@@ -130,7 +137,7 @@ namespace TestServer
                 }
             }
         }
-        public ServerConfig ServerConfig { get; set; } = null;
+        public ProductConfig ProductConfig { get; set; } = null;
         
         private void OnPicSetPathButtonClicked(object obj)
         {
@@ -250,7 +257,6 @@ namespace TestServer
             get => _header;
             
         }
-        public Action<byte[]> SendDataCallback { get; set; } = delegate { };
         Dictionary<string, FileSystemWatcher> _pathToWatcher = new Dictionary<string, FileSystemWatcher>();
         public TabItemViewModel(string header = "",
             string pictureSetPath = "",
@@ -266,53 +272,29 @@ namespace TestServer
             X64ProgramPath = x64ProgramPath;
             StdVersionPath = stdVersionPath;
         }
+        public event PropertyChangedEventHandler FolderStateChanged;
         private void PictureSetContentChanged(object obj, FileSystemEventArgs e)
-        {
-            ServerData serverData = new ServerData();
+        {                    
             DirectoryInfo dirInfo = new DirectoryInfo(PictureSetPath);
             var allCsvs = dirInfo.GetFiles("*.csv");
-            serverData.PictureSetChanged = true;
-            serverData.ProductType = Header;
             foreach (var csv in allCsvs)
             {
-                serverData.PictureSetList.Add(csv.Name);
+                //测试产生的结果csv
+                if (csv.Name.Contains("_.csv"))
+                    return;
             }
-           
-            string jsonString = JsonSerializer.Serialize(serverData);
-            byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
-            SendDataCallback(data);
+            FolderStateChanged?.Invoke(this, new PropertyChangedEventArgs("PictureSetPath"));
 
         }
         private void TemplateSetContentChanged(object obj, FileSystemEventArgs e)
         {
-            ServerData serverData = new ServerData();
-            DirectoryInfo dirInfo = new DirectoryInfo(TemplatePath);
-            var allJsons = dirInfo.GetFiles("*.json");
-            serverData.TemplateSetChanged = true;
-            serverData.ProductType = Header;
-            foreach (var template in allJsons)
-            {
-                serverData.TemplateList.Add(template.Name);
-            }
-            string jsonString = JsonSerializer.Serialize(serverData);
-            byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
-            SendDataCallback(data);
+
+            FolderStateChanged?.Invoke(this, new PropertyChangedEventArgs("TemplatePath"));
+
         }
         private void StdVersionContentChanged(object obj, FileSystemEventArgs e)
-        {
-            ServerData serverData = new ServerData();
-            DirectoryInfo dirInfo = new DirectoryInfo(StdVersionPath);
-            var allDirs = dirInfo.GetDirectories();
-            serverData.StdVersionListChanged = true;
-            serverData.ProductType = Header;
-            foreach (var dir in allDirs)
-            {
-                serverData.StdVersionList.Add(dir.Name);
-            }
-            
-            string jsonString = JsonSerializer.Serialize(serverData);
-            byte[] data = System.Text.Encoding.ASCII.GetBytes(jsonString);
-            SendDataCallback(data);
+        {          
+            FolderStateChanged?.Invoke(this, new PropertyChangedEventArgs("StdVersionPath"));
         }
     }
 }

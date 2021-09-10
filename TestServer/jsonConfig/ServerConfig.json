@@ -1,0 +1,18 @@
+{
+    "TagToProduct":
+    {
+        "DBR":
+        {
+            "DefaultConfigPath":"C:\\TestConfig\\DBR",
+            "DefaultConfig":["dbrStabilityConfig.json"],
+            "TagToImageSet":
+            {}
+        },
+        "DLR":
+        {},
+        "DDN":
+        {}
+    },
+    "StabilityType":"x64",
+    "PicturePath":"C:\\PictureBase"
+}

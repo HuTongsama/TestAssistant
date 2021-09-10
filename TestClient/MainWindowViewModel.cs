@@ -34,7 +34,8 @@ namespace TestClient
                 if (value != _selectedItem)
                 {
                     _selectedItem = value;
-                    SetConfigValue("selectedProduct", value.Header);
+                    if (value != null)
+                        SetConfigValue("selectedProduct", value.Header);
                     NotifyPropertyChanged("SelectedItem");
                 }
             }
@@ -117,6 +118,8 @@ namespace TestClient
                             Thread clientThread = new Thread(ClientThreadFunc);
                             clientThread.IsBackground = true;
                             clientThread.Start();
+                            ConnectButtonText = "已连接";
+                            EnableConnectButton = false;
                         }
                     },
                     delegate { return true; });
@@ -124,7 +127,32 @@ namespace TestClient
                 return _connectButtonCommand;
             }
         }
-
+        private bool _enableConnectButton = true;
+        public bool EnableConnectButton
+        {
+            get => _enableConnectButton;
+            set
+            {
+                if (value != _enableConnectButton)
+                {
+                    _enableConnectButton = value;
+                    NotifyPropertyChanged("EnableConnectButton");
+                }
+            }
+        }
+        private string _connectButtonText = string.Empty;
+        public string ConnectButtonText
+        {
+            get => _connectButtonText;
+            set
+            {
+                if (value != _connectButtonText)
+                {
+                    _connectButtonText = value;
+                    NotifyPropertyChanged("ConnectButtonText");
+                }
+            }
+        }
         public ObservableCollection<ListItem> ServerTestList { get; set; } = new ObservableCollection<ListItem>();
         public ObservableCollection<ListItem> ServerCompareList { get; set; } = new ObservableCollection<ListItem>();
         public MainWindowViewModel()
@@ -172,7 +200,9 @@ namespace TestClient
                     _ftpHelper = new FTPHelper(_ftpConfig.FtpUrl, _ftpConfig.FtpUserName, _ftpConfig.FtpPassword);
                     _ftpHelper.MakeDirectory(_ftpConfig.FtpCachePath);
                 }
-            }       
+            }
+
+            ConnectButtonText = "连接";
         }
 
         private void UpdateTabCollection(List<string> srcList, ObservableCollection<ListItem> listItems,
@@ -198,6 +228,8 @@ namespace TestClient
                 if (!_client.IsConnected())
                 {
                     MessageBox.Show("服务器断开连接");
+                    ConnectButtonText = "连接";
+                    EnableConnectButton = true;
                     break;
                 }
                 SendClientData();
@@ -213,10 +245,20 @@ namespace TestClient
                             TabItemViewModel curTab = _tabItems[serverData.ProductType];                          
                             if (serverData.PictureSetChanged)
                             {
+                                App.Current.Dispatcher.Invoke((Action)
+                                    delegate
+                                    {
+                                        curTab.PictureSetList.Clear();
+                                    });
                                 UpdateTabCollection(serverData.PictureSetList, curTab.PictureSetList, sameListItem);
                             }
                             if (serverData.TemplateSetChanged)
                             {
+                                App.Current.Dispatcher.Invoke((Action)
+                                    delegate
+                                    {
+                                        curTab.TemplateSetList.Clear();
+                                    });
                                 UpdateTabCollection(serverData.TemplateList, curTab.TemplateSetList, sameListItem);
                             }
                             if (serverData.DecodeTypeList.Count > 0)
@@ -388,7 +430,7 @@ namespace TestClient
                 {
                     foreach (var path in dllPathList)
                     {
-                        DirectoryInfo dirInfo = new DirectoryInfo(SelectedItem.X64Path);
+                        DirectoryInfo dirInfo = new DirectoryInfo(path);
                         FileInfo[] files = dirInfo.GetFiles("*.dll", SearchOption.AllDirectories);
                         foreach (var file in files)
                         {
@@ -471,6 +513,7 @@ namespace TestClient
         {
             if (data != null)
             {
+                MessageBox.Show("Start uploading");
                 data.OperateType = operateType;
                 string errMessage = string.Empty;
                 if (DataCheck(data, out errMessage))

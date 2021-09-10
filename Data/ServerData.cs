@@ -26,11 +26,16 @@ namespace Data
         public Dictionary<string, List<string>> KeyToPictureSet { get; set; } = new Dictionary<string, List<string>>();
         public string FinishedVersionInfo { get; set; } = string.Empty;
     }
-
-    public class ServerConfig
+    public class ProductConfig
     {
         public string DefaultConfigPath { get; set; } = string.Empty;
         public List<string> DefaultConfig { get; set; } = new List<string>();
         public Dictionary<string, List<string>> TagToImageSet { get; set; } = new Dictionary<string, List<string>>();
+    }
+    public class ServerConfig
+    {
+        public Dictionary<string, ProductConfig> TagToProduct { get; set; } = new Dictionary<string, ProductConfig>();
+        public string StabilityType { get; set; } = "x64";
+        public string PicturePath { get; set; } = string.Empty;
     }
 }

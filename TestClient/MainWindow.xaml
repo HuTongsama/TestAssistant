@@ -245,7 +245,7 @@
         </Grid.ColumnDefinitions>
         <TabControl ItemsSource="{Binding TabItems.Values}" ItemContainerStyle="{StaticResource TabItemStyle}" SelectedItem="{Binding SelectedItem}" 
                     HorizontalAlignment="Left" Height="451" Margin="10,10,0,0" VerticalAlignment="Top" Width="996" Grid.ColumnSpan="2"/>
-        <Button Content="稳定性测试" IsEnabled="False" Command="{Binding StabilityButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="345,589,0,0" VerticalAlignment="Top" Width="75"/>
+        <Button Content="稳定性测试" Command="{Binding StabilityButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="345,589,0,0" VerticalAlignment="Top" Width="75"/>
         <Button Content="性能测试" Command="{Binding PerformanceButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="345,551,0,0" VerticalAlignment="Top" Width="75"/>
         <Button Content="比较" Command="{Binding CompareButtonCommand}" Grid.Column="1" HorizontalAlignment="Left" Margin="345,625,0,0" VerticalAlignment="Top" Width="75" RenderTransformOrigin="2.693,0.474"/>
         <ScrollViewer gui:AutoScrollBehavior.AutoScroll="True" HorizontalAlignment="Left" Height="195" Margin="10,506,0,0" VerticalAlignment="Top" Width="378">
@@ -261,8 +261,8 @@
                 <ColumnDefinition Width="4*"/>
                 <ColumnDefinition Width="2*"/>
             </Grid.ColumnDefinitions>
-            <TextBox Grid.Column="0" Text="{Binding ServerAddress}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
-            <Button Grid.Column="1" Content="连接" HorizontalContentAlignment="Center" Command="{Binding ConnectButtonCommand}"/>
+            <TextBox Grid.Column="0" Text="{Binding ServerAddress}" IsEnabled="{Binding EnableConnectButton}" HorizontalContentAlignment="Center" VerticalContentAlignment="Center"/>
+            <Button Grid.Column="1" Content="{Binding ConnectButtonText}" IsEnabled="{Binding EnableConnectButton}" HorizontalContentAlignment="Center" Command="{Binding ConnectButtonCommand}"/>
         </Grid>
     </Grid>
 </Window>

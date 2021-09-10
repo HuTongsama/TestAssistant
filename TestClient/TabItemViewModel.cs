@@ -73,7 +73,8 @@ namespace TestClient
                 if (value != _useServerConfig)
                 {
                     _useServerConfig = value;
-                    SetConfigValue(GetConfigKey(Header, "UseServerConfig"), value.ToString());
+                    if (value != null)
+                        SetConfigValue(GetConfigKey(Header, "UseServerConfig"), value.ToString());
                     EnableContent = !value;
                     NotifyPropertyChanged("UseServerConfig");
                 }
@@ -102,7 +103,8 @@ namespace TestClient
                 if (value != _selectedServerConfig)
                 {
                     _selectedServerConfig = value;
-                    SetConfigValue(GetConfigKey(Header, "ServerConfig"), value.ItemName);
+                    if (value != null)
+                        SetConfigValue(GetConfigKey(Header, "ServerConfig"), value.ItemName);
                     NotifyPropertyChanged("SelectedServerConfig");
                 }
             }
@@ -117,7 +119,8 @@ namespace TestClient
                 if (value != _selectedDefaultTemplate)
                 {
                     _selectedDefaultTemplate = value;
-                    SetConfigValue(GetConfigKey(Header, "DefaultTemplate"), value.ItemName);
+                    if (value != null)
+                        SetConfigValue(GetConfigKey(Header, "DefaultTemplate"), value.ItemName);
                     NotifyPropertyChanged("SelectedDefaultTemplate");
                 }
             }
@@ -134,7 +137,8 @@ namespace TestClient
                 if (value != _selectedDecodeType)
                 {
                     _selectedDecodeType = value;
-                    SetConfigValue(GetConfigKey(Header, "DecodeType"), value.ItemName);
+                    if (value != null)
+                        SetConfigValue(GetConfigKey(Header, "DecodeType"), value.ItemName);
                     NotifyPropertyChanged("SelectedDecodeType");
                 }
             }
@@ -333,7 +337,7 @@ namespace TestClient
             TemplateSetList.CollectionChanged += TemplateSetListChanged;
             DecodeTypeList.CollectionChanged += DecodeTypeListChanged;
             TestVersionList.CollectionChanged += VersionListChanged;
-            StandardVersionList.CollectionChanged += VersionListChanged;
+            StandardVersionList.CollectionChanged += StandardVersionListChanged;
             ServerConfigList.CollectionChanged += ServerConfigListChanged;
 
             X86Path = x86Path;
@@ -347,6 +351,8 @@ namespace TestClient
                 var versionList = standardVersionConfig.Split(' ');
                 foreach (var version in versionList)
                 {
+                    if (version == string.Empty)
+                        continue;
                     ListItem item = new ListItem(version);
                     StandardVersionList.Add(item);
                 }
@@ -482,6 +488,7 @@ namespace TestClient
         }
         private void StandardVersionListChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
+            VersionListChanged(sender, e);
             string config = string.Empty;
             foreach (var stdVersion in StandardVersionList)
             {

@@ -29,5 +29,16 @@ namespace Data
             }
 
         }
+
+        static public void WriteLog(string logMessage)
+        {
+            string fileName = "ServerLog.txt";
+            if (!File.Exists(fileName))
+            {
+                var stream = System.IO.File.OpenWrite(fileName);
+                stream.Close();
+            }
+            System.IO.File.AppendAllText(fileName, logMessage + "\r\n");
+        }
     }
 }

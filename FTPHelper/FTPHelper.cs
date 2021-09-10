@@ -5,8 +5,9 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Windows;
-
+using Data;
 namespace FTP
 {
     public class FtpConfig
@@ -35,7 +36,7 @@ namespace FTP
         {
             if (localFile == null || !localFile.Exists)
                 return;
-            string path = _ftpUrl + "/" + dstPath + "/" + localFile.Name;
+            string path = _ftpUrl + "/" + dstPath + "/" + HttpUtility.UrlEncode(localFile.Name);
            
             FtpWebRequest request = (FtpWebRequest)WebRequest.Create(path);
             
@@ -67,7 +68,7 @@ namespace FTP
             dirInfo.Create();
             if (MakeDirectory(ftpPath))
             {
-                string path = _ftpUrl + "/" + ftpPath;
+                string path = _ftpUrl + "/" + ftpPath;                
                 FtpWebRequest request = (FtpWebRequest)WebRequest.Create(path);
                 NetworkCredential networkCredential = new NetworkCredential(_userName, _password);
                 request.Credentials = networkCredential;
@@ -113,13 +114,13 @@ namespace FTP
         public bool MakeDirectory(string dir)
         {
             bool hasDir = false;
-            var paths = dir.Split('/');
+            var paths = dir.Split('/');           
             string curPath = _ftpUrl;
             foreach (var tmpPath in paths)
-            {                
+            {
                 try
-                {
-                    curPath = curPath + "/" + tmpPath;
+                {                   
+                    curPath = curPath + "/" + tmpPath;                  
                     FtpWebRequest request = (FtpWebRequest)WebRequest.Create(curPath);
                     request.Credentials = new NetworkCredential(_userName, _password);
                     request.Method = WebRequestMethods.Ftp.MakeDirectory;
@@ -142,7 +143,9 @@ namespace FTP
                     }
                     else 
                     {
+                        CommonFuction.WriteLog(e.Message + '\r');
                         hasDir = false;
+                        return hasDir;
                     }
                 }
                 if (!hasDir)
