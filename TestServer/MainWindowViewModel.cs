@@ -288,6 +288,19 @@ namespace TestServer
             if (selectedTab != string.Empty && selectedTab == productName)
                 SelectedTab = item;
 
+            productName = ProductType.SCANDIT.ToString();
+            item = new TabItemViewModel(productName,
+                config.AppSettings.Settings["scanditPicturePath"].Value,
+                config.AppSettings.Settings["scanditTemplatePath"].Value,
+                config.AppSettings.Settings["scanditX86ProgramPath"].Value,
+                config.AppSettings.Settings["scanditX64ProgramPath"].Value,
+                config.AppSettings.Settings["scanditStdVersionPath"].Value);
+            item.PropertyChanged += this.TabItemPropertyChanged;
+            item.FolderStateChanged += this.TabItemPropertyChanged;
+            _tabItems.Add(item);
+            if (selectedTab != string.Empty && selectedTab == productName)
+                SelectedTab = item;
+
             ResultPath = config.AppSettings.Settings["resultPath"].Value;
             ConclusionPath = config.AppSettings.Settings["conclusionPath"].Value;
             DllPath = config.AppSettings.Settings["dllPath"].Value;
@@ -673,6 +686,13 @@ namespace TestServer
                 case ProductType.DDN:
                     autoTestJson.runnerName = "DDNAutoTest.exe";
                     break;
+                case ProductType.SCANDIT:
+                    {
+                        processStartInfo.WorkingDirectory = _currentLocalPath;
+                        processStartInfo.FileName = _currentLocalPath + "/" + "Test.exe";
+                        processStartInfo.Arguments = data.VersionInfo;
+                    }
+                    break;
                 default:
                     return false;
             }
@@ -730,7 +750,8 @@ namespace TestServer
                             if (_ftpHelper != null && _ftpHelper.MakeDirectory(path))
                             {
                                 ServerData serverData = new ServerData();
-                                serverData.Message = string.Format("Version {0} exist crash,save file to ftp", data.VersionInfo);
+                                serverData.Message = string.Format("Version {0} exist {1} crash,save file to ftp",
+                                    data.VersionInfo, _serverConfig.StabilityType);
                                 SendToAllClients(serverData);
                                 _ftpHelper.UploadDirectory(dstDir, path);
                             }
@@ -1162,6 +1183,7 @@ namespace TestServer
                 return algorithmTestJson;
             }
             algorithmTestJson = new AlgorithmTestJson();
+            algorithmTestJson.DefaultClass = "Default";
             if (operateType == OperateType.Performance)
                 algorithmTestJson.FilePath = productTab.PictureSetPath;
             else if (operateType == OperateType.Stability)
@@ -1170,25 +1192,13 @@ namespace TestServer
             algorithmTestJson.DecodeType = data.TestDataType.ToString();
             string templateName = string.Empty;
             if (productType == ProductType.DBR)
-                templateName = "Test1";
+                algorithmTestJson.TemplateName = "Test1";
             else if (productType == ProductType.DLR)
-                templateName = "locr";
+                algorithmTestJson.TemplateName = "locr";
             else if (productType == ProductType.DDN)
-                templateName = "DN_1";
-            algorithmTestJson.DefaultTemplate = new Dictionary<string, string>()
-            {
-                {data.DefaultTemplate, templateName }
-            };
-            foreach (var templateToCsv in data.TemplateToCsvSet)
-            {
-                algorithmTestJson.Template.Add(
-                    templateToCsv.Key,                      
-                    new Dictionary<string, List<string>>()
-                    {
-                        { templateName,templateToCsv.Value }
-                    });
-            }
-            algorithmTestJson.ImageCsvSet = data.ImageCsvList;
+                algorithmTestJson.TemplateName = "DN_1";
+            algorithmTestJson.DefaultTemplate = data.DefaultTemplate;
+            algorithmTestJson.TestObjects = data.TestObjects;            
             return algorithmTestJson;
         }
     }

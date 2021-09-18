@@ -31,6 +31,7 @@ namespace Data
         public string DefaultConfigPath { get; set; } = string.Empty;
         public List<string> DefaultConfig { get; set; } = new List<string>();
         public Dictionary<string, List<string>> TagToImageSet { get; set; } = new Dictionary<string, List<string>>();
+        public Dictionary<string, List<string>> ClassToTemplate { get; set; } = new Dictionary<string, List<string>>();
     }
     public class ServerConfig
     {

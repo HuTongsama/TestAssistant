@@ -191,6 +191,12 @@ namespace TestClient
                 SelectedItem = item;
             _tabItems.Add(productName, item);
 
+            productName = ProductType.SCANDIT.ToString();
+            item = new TabItemViewModel(productName);
+            if (selectedProduct != string.Empty && selectedProduct == productName)
+                SelectedItem = item;
+            _tabItems.Add(productName, item);
+
             if (System.IO.File.Exists("ftpConfig.json"))
             {
                 string jsonData = System.IO.File.ReadAllText("ftpConfig.json");
@@ -283,7 +289,12 @@ namespace TestClient
                             }
                             if (serverData.StdVersionListChanged)
                             {
-                                UpdateTabCollection(serverData.StdVersionList, curTab.StandardVersionList, sameListItem);
+                                App.Current.Dispatcher.Invoke((Action)
+                                   delegate
+                                   {
+                                       curTab.ServerStandardVersions.Clear();
+                                   });
+                                UpdateTabCollection(serverData.StdVersionList, curTab.ServerStandardVersions, sameListItem);
                             }                          
                             if (serverData.FinishedVersionInfo != string.Empty)
                             {
@@ -299,6 +310,11 @@ namespace TestClient
                             }
                             if (serverData.ConfigListChanged)
                             {
+                                App.Current.Dispatcher.Invoke((Action)
+                                   delegate
+                                   {
+                                       curTab.ServerConfigList.Clear();
+                                   });
                                 UpdateTabCollection(serverData.ConfigList, curTab.ServerConfigList, sameListItem);
                             }
                         }                      
@@ -355,27 +371,31 @@ namespace TestClient
             {
                 foreach (var listItem in SelectedItem.SelectedPicList)
                 {
-                    data.ImageCsvList.Add(listItem.ItemName);
-                }
-                foreach (var template in SelectedItem.TemplateSetList)
-                {
-                    if (template.IsSelected)
+                    if (SelectedItem.PicToTemplate.ContainsKey(listItem.ItemName))
                     {
-                        data.DefaultTemplate = template.ItemName;
-                        break;
+                        List<string> templates = SelectedItem.PicToTemplate[listItem.ItemName];
+                        foreach (var template in templates)
+                        {
+                            TestObject testObject = new TestObject(listItem.ItemName);
+                            testObject.Template = template;
+                            data.TestObjects.Add(testObject);
+                        }
                     }
-                }
-                foreach (var keyPair in SelectedItem.PicToTemplate)
-                {
-                    string template = keyPair.Value;
-                    string csv = keyPair.Key;
-                    if (!data.TemplateToCsvSet.ContainsKey(template))
+                    else
                     {
-                        data.TemplateToCsvSet.Add(template, new List<string>());
-
+                        TestObject testObject = new TestObject(listItem.ItemName);
+                        data.TestObjects.Add(testObject);
                     }
-                    data.TemplateToCsvSet[template].Add(csv);
+                    
                 }
+                if (SelectedItem.SelectedDefaultTemplate != null)
+                {
+                    string template = SelectedItem.SelectedDefaultTemplate.ItemName;
+                    if (template != string.Empty)
+                    {
+                        data.DefaultTemplate = template;
+                    }
+                }                               
             }
             foreach (var decodeType in SelectedItem.DecodeTypeList)
             {
@@ -454,6 +474,8 @@ namespace TestClient
         {
             errMessage = string.Empty;
             bool isValid = true;
+            if (data.ProductType == ProductType.SCANDIT)
+                return isValid;
             if (data.OperateType != OperateType.Compare)
             {
                 if (!data.UseServerConfig)

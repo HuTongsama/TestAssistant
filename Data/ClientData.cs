@@ -23,7 +23,19 @@ namespace Data
     {
         DBR = 0,
         DLR,
-        DDN
+        DDN,
+        SCANDIT
+    }
+    public class TestObject
+    {
+        public string Csv { get; set; } = string.Empty;
+        public string Template { get; set; } = string.Empty;
+        public string Class { get; set; } = string.Empty;
+        public TestObject() { }
+        public TestObject(string csv = "")
+        {
+            Csv = csv;
+        }
     }
     public class ClientData:IComparable<ClientData>
     {
@@ -37,8 +49,7 @@ namespace Data
         public DateTime UploadTime { get; set; } = new DateTime();
         public string VersionInfo { get; set; } = string.Empty;
         public string FtpCachePath { get; set; } = string.Empty;
-        public List<string> ImageCsvList { get; set; } = new List<string>();
-        public Dictionary<string, List<string>> TemplateToCsvSet { get; set; } = new Dictionary<string, List<string>>();
+        public List<TestObject> TestObjects { get; set; } = new List<TestObject>();
         public string ServerConfig { get; set; } = string.Empty;
         public bool UseServerConfig { get; set; } = false;
         public int CompareTo(ClientData other)

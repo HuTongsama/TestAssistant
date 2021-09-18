@@ -6,12 +6,39 @@
             "DefaultConfigPath":"C:\\TestConfig\\DBR",
             "DefaultConfig":["dbrStabilityConfig.json"],
             "TagToImageSet":
-            {}
+            {
+                "1D":[
+                    "Gen1D.csv",
+                    "ScanDoc.OneD_Check.csv",
+                    "zxing.oned_Check.csv",
+                    "isthmusinc_Check.csv",
+                    "N95-2592x1944_Check.csv",
+                    "NonScanDoc.OneD_Check.csv",
+                    "downPic_code128.csv",
+                    "1DFrame.csv"
+                ]
+            }
         },
         "DLR":
         {},
         "DDN":
-        {}
+        {},
+        "SCANDIT":
+        {
+            "TagToImageSet":
+            {
+                "1D":[
+                    "Gen1D.csv",
+                    "ScanDoc.OneD_Check.csv",
+                    "zxing.oned_Check.csv",
+                    "isthmusinc_Check.csv",
+                    "N95-2592x1944_Check.csv",
+                    "NonScanDoc.OneD_Check.csv",
+                    "downPic_code128.csv",
+                    "1DFrame.csv"
+                ]
+            }
+        }
     },
     "StabilityType":"x64",
     "PicturePath":"C:\\PictureBase"

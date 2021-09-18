@@ -73,8 +73,7 @@ namespace TestClient
                 if (value != _useServerConfig)
                 {
                     _useServerConfig = value;
-                    if (value != null)
-                        SetConfigValue(GetConfigKey(Header, "UseServerConfig"), value.ToString());
+                    SetConfigValue(GetConfigKey(Header, "UseServerConfig"), value.ToString());
                     EnableContent = !value;
                     NotifyPropertyChanged("UseServerConfig");
                 }
@@ -145,6 +144,9 @@ namespace TestClient
         }
         public ObservableCollection<ListItem> TestVersionList { get; set; } = new ObservableCollection<ListItem>();
         public ListItem SelectedTestVersion { get; set; } = new ListItem();
+
+        private ObservableCollection<ListItem> _localStandardVersions = new ObservableCollection<ListItem>();
+        public ObservableCollection<ListItem> ServerStandardVersions { get; set; } = new ObservableCollection<ListItem>();
         public ObservableCollection<ListItem> StandardVersionList { get; set; } = new ObservableCollection<ListItem>();
         public ListItem SelectedStandardVersion { get; set; } = new ListItem();
         private Dictionary<string, List<ListItem>> _keyToPicSet = new Dictionary<string, List<ListItem>>();
@@ -205,8 +207,8 @@ namespace TestClient
                 return _keyToCheckState;
             }
         }
-        private Dictionary<string, string> _picToTemplate = new Dictionary<string, string>();
-        public Dictionary<string, string> PicToTemplate
+        private Dictionary<string, List<string>> _picToTemplate = new Dictionary<string, List<string>>();
+        public Dictionary<string, List<string>> PicToTemplate
         {
             get => _picToTemplate;
         }
@@ -290,8 +292,8 @@ namespace TestClient
         {
             if (SelectedTestVersion != null)
             {
-                ListItem item = new ListItem(SelectedTestVersion.ItemName);               
-                StandardVersionList.Add(item);
+                ListItem item = new ListItem(SelectedTestVersion.ItemName);
+                _localStandardVersions.Add(item);
                 TestVersionList.Remove(SelectedTestVersion);
             }
         }
@@ -313,7 +315,28 @@ namespace TestClient
             {
                 ListItem item = new ListItem(SelectedStandardVersion.ItemName);
                 TestVersionList.Add(item);
-                StandardVersionList.Remove(SelectedStandardVersion);
+                bool removeFlag = false;
+                for (int itemId = 0; itemId < _localStandardVersions.Count; ++itemId)
+                {
+                    if (item.ItemName == _localStandardVersions[itemId].ItemName)
+                    {
+                        _localStandardVersions.RemoveAt(itemId);
+                        removeFlag = true;
+                        break;
+                    }
+                }
+                if (!removeFlag)
+                {
+                    for (int itemId = 0; itemId < ServerStandardVersions.Count; ++itemId)
+                    {
+                        if (item.ItemName == ServerStandardVersions[itemId].ItemName)
+                        {
+                            ServerStandardVersions.RemoveAt(itemId);
+                            removeFlag = true;
+                            break;
+                        }
+                    }
+                }
             }
         }
         private RelayCommand _removeStandardCommand;
@@ -337,11 +360,14 @@ namespace TestClient
             TemplateSetList.CollectionChanged += TemplateSetListChanged;
             DecodeTypeList.CollectionChanged += DecodeTypeListChanged;
             TestVersionList.CollectionChanged += VersionListChanged;
-            StandardVersionList.CollectionChanged += StandardVersionListChanged;
+            StandardVersionList.CollectionChanged += VersionListChanged;
+            _localStandardVersions.CollectionChanged += LocalStandardVersionListChanged;
+            ServerStandardVersions.CollectionChanged += ServerStandardVersionListChanged;
             ServerConfigList.CollectionChanged += ServerConfigListChanged;
 
             X86Path = x86Path;
             X64Path = x64Path;
+            
             if (useServerConfig != null && useServerConfig != string.Empty)            
             {
                 UseServerConfig = bool.Parse(useServerConfig);
@@ -354,7 +380,7 @@ namespace TestClient
                     if (version == string.Empty)
                         continue;
                     ListItem item = new ListItem(version);
-                    StandardVersionList.Add(item);
+                    _localStandardVersions.Add(item);
                 }
             }
         }
@@ -486,15 +512,46 @@ namespace TestClient
             if (selectedItem != null)
                 SelectedServerConfig = selectedItem;
         }
-        private void StandardVersionListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void MergeStandardVersion()
         {
-            VersionListChanged(sender, e);
+            List<ListItem> listItems = new List<ListItem>();
+            
+            foreach (var item in ServerStandardVersions)
+            {
+                listItems.Add(item);
+            }
+            SameListItem sameListItem = new SameListItem();
+            for (int itemId = 0; itemId < _localStandardVersions.Count; ++itemId)
+            {
+                var item = _localStandardVersions[itemId];
+                if (Enumerable.Contains(ServerStandardVersions, item, sameListItem))
+                {
+                    _localStandardVersions.RemoveAt(itemId);
+                    itemId--;
+                    continue;
+                }
+                listItems.Add(item);
+            }
+            StandardVersionList.Clear();
+            foreach (var item in listItems)
+            {
+                StandardVersionList.Add(item);
+            }
+        }
+        private void LocalStandardVersionListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            //VersionListChanged(sender, e);
             string config = string.Empty;
-            foreach (var stdVersion in StandardVersionList)
+            foreach (var stdVersion in _localStandardVersions)
             {
                 config += (stdVersion.ItemName + " ");
             }
             SetConfigValue(GetConfigKey(Header, "StandardVersion"), config);
+            MergeStandardVersion();
+        }
+        private void ServerStandardVersionListChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            MergeStandardVersion();
         }
         private void ReadConfig(string configKey, NotifyCollectionChangedEventArgs e,out ListItem selectedItem)
         {
@@ -515,27 +572,40 @@ namespace TestClient
                 }
             }
         }
-        private void UpdateSelectedTemplate(string template)
-        {           
-            foreach (var listItem in SelectedPicList)
+        private void UpdateSelectedTemplate(List<string> templateList)
+        {
+            _picToTemplate.Clear();
+            foreach (var template in templateList)
             {
-                string itemName = listItem.ItemName;
-                if (!listItem.IsSelected)
-                    continue;
-                if (_picToTemplate.ContainsKey(itemName))
+                foreach (var listItem in SelectedPicList)
                 {
-                    _picToTemplate[itemName] = template;
-                }
-                else
-                {
-                    _picToTemplate.Add(itemName, template);
+                    string itemName = listItem.ItemName;
+                    if (!listItem.IsSelected)
+                        continue;
+                    if (!_picToTemplate.ContainsKey(itemName))
+                    {
+                        _picToTemplate.Add(itemName, new List<string>());
+                        
+                    }
+                    if (_picToTemplate[itemName].Contains(template))
+                    {
+                        continue;
+                    }
+                    _picToTemplate[itemName].Add(template);
                 }
             }
+            
         }
         private void SelectedItemRightClicked()
         {
             TemplateViewModel templateVm = new TemplateViewModel();
-            templateVm.TemplateList = new ObservableCollection<ListItem>(TemplateSetList);
+            templateVm.TemplateList = new ObservableCollection<ListItem>();
+            foreach (var item in TemplateSetList)
+            {
+                ListItem listItem = new ListItem(item.ItemName);
+                listItem.UseCustomerLeftClick = true;
+                templateVm.TemplateList.Add(listItem);
+            }
             templateVm.UpdateOwnerData = UpdateSelectedTemplate;
             TemplateWindowService templateWindowService = new TemplateWindowService();
 

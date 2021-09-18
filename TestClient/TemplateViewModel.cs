@@ -10,16 +10,20 @@ namespace TestClient
 {
     class TemplateViewModel : ViewModelBase
     {       
-        public int SelectedId { get; set; } = -1;
         public Action CloseAction { get; set; } = delegate { };
-        public Action<string> UpdateOwnerData { get; set; } = delegate { };
+        public Action<List<string>> UpdateOwnerData { get; set; } = delegate { };
 
         private void TemplateButtonClick(object obj)
         {
-            if (SelectedId > 0 && SelectedId < TemplateList.Count)
-            { 
-                UpdateOwnerData(TemplateList[SelectedId].ItemName); 
+            List<string> selectedNames = new List<string>();
+            foreach (var item in TemplateList)
+            {
+                if (item.IsSelected)
+                {
+                    selectedNames.Add(item.ItemName); 
+                }
             }
+            UpdateOwnerData(selectedNames);           
             CloseAction();
         }
         private RelayCommand _templateButtonClickCommand;

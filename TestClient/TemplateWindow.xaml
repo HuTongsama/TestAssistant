@@ -8,10 +8,11 @@
         Title="TemplateWindow" Height="294" Width="210">
     <Grid>
         <StackPanel>
-            <ListBox Height="230" ItemsSource="{Binding TemplateList, BindingGroupName=ItemName}" SelectedIndex="{Binding SelectedId}">
+            <ListBox Height="230" ItemsSource="{Binding TemplateList, BindingGroupName=ItemName}" SelectionMode="Multiple">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem">
                         <Setter Property="Content" Value="{Binding ItemName}"></Setter>
+                        <Setter Property="IsSelected" Value="{Binding IsSelected}"></Setter>
                     </Style>
                 </ListBox.ItemContainerStyle>
             </ListBox>

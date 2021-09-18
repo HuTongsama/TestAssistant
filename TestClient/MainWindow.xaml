@@ -235,6 +235,13 @@
                         </Setter.Value>
                     </Setter>
                 </DataTrigger>
+                <DataTrigger Binding="{Binding Header}" Value="SCANDIT">
+                    <Setter Property="Content">
+                        <Setter.Value>
+                            <ContentControl Template="{StaticResource TabGridTemplate}"/>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
             </Style.Triggers>
         </Style>
     </Window.Resources>
